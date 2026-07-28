@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HONEYWORKS — 벌집 짓기</title>
+<style>
+  :root{
+    --bg-0:#120b05;
+    --bg-1:#1c1309;
+    --wax:#3d2b16;
+    --wax-line:#6b4d29;
+    --honey-1:#ffcf4d;
+    --honey-2:#f2932b;
+    --ink:#f4e6c8;
+    --ink-dim:#b39d78;
+    --ink-faint:#7a6647;
+    --accent:#ffd873;
+    --danger:#e0654f;
+    --money:#8fe37a;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+  html,body{
+    height:100%; margin:0; overflow:hidden;
+    background:radial-gradient(ellipse at 50% 0%, var(--bg-1) 0%, var(--bg-0) 70%);
+    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    color:var(--ink);
+    touch-action:none;
+  }
+  .display{font-weight:900; letter-spacing:0.5px;}
+  #app{position:fixed; inset:0; display:flex; flex-direction:column;}
+
+  header{padding:10px 14px 6px; display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; z-index:5;}
+  .title-block{display:flex; flex-direction:column; gap:1px;}
+  .title-block .logo{font-size:21px; color:var(--accent); text-shadow:0 0 14px rgba(255,204,77,0.35);}
+  .title-block .sub{font-size:10px; color:var(--ink-faint); letter-spacing:0.3px;}
+  #reset-btn{background:none; border:1px solid var(--wax-line); color:var(--ink-faint); border-radius:8px; padding:5px 9px; font-size:10px; font-family:inherit;}
+
+  #resbar{display:flex; gap:7px; padding:0 12px 8px; flex-shrink:0; z-index:5; overflow-x:auto;}
+  .res-chip{display:flex; align-items:center; gap:5px; background:linear-gradient(180deg, rgba(61,43,22,0.9), rgba(30,21,10,0.9)); border:1px solid var(--wax-line); border-radius:999px; padding:5px 10px 5px 7px; flex-shrink:0;}
+  .res-chip .ic{width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px;}
+  .res-chip.labor .ic{background:rgba(224,101,79,0.18);}
+  .res-chip.pollen .ic{background:rgba(255,216,115,0.18);}
+  .res-chip.honey .ic{background:rgba(255,207,77,0.22);}
+  .res-chip.money .ic{background:rgba(143,227,122,0.2);}
+  .res-chip .val{font-size:13px; font-weight:700; font-variant-numeric:tabular-nums;}
+  .res-chip .lbl{font-size:8.5px; color:var(--ink-faint); margin-top:-2px;}
+  .res-chip .valwrap{display:flex; flex-direction:column; line-height:1.05;}
+
+  #stage{position:relative; flex:1; min-height:0;}
+  svg#hive-svg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+
+  .hexcell{cursor:pointer;}
+  .hexcell .outer{fill:url(#waxRim); stroke:#160e06; stroke-width:1.4;}
+  .hexcell .inner{fill:url(#waxWell); stroke:none;}
+  .hexcell.filled .inner{fill:url(#honeyGlow1);}
+  .hexcell.filled.lv2 .inner{fill:url(#honeyGlow2);}
+  .hexcell.filled.lv3 .inner{fill:url(#honeyGlow3);}
+  .hexcell.filled .inner{filter:url(#softGlow);}
+  .hexcell .ring{fill:none; stroke-width:2.2; opacity:0;}
+  .hexcell.lv2 .ring{stroke:#cd7f32; opacity:0.9;}
+  .hexcell.lv3 .ring{stroke:#ffd700; opacity:0.95;}
+  .hexcell .shine{fill:rgba(255,255,255,0.5); opacity:0;}
+  .hexcell.filled .shine{opacity:0.55;}
+  .hexcell.ghost .outer{fill:rgba(255,216,115,0.04); stroke:#ffd873; stroke-width:1.6; stroke-dasharray:5 5; animation:ghostPulse 1.8s ease-in-out infinite;}
+  .hexcell.filled .inner{animation:honeyPulse 2.6s ease-in-out infinite;}
+  @keyframes ghostPulse{0%,100%{opacity:0.55;} 50%{opacity:0.95;}}
+  @keyframes honeyPulse{0%,100%{filter:url(#softGlow) brightness(1);} 50%{filter:url(#softGlow) brightness(1.12);}}
+
+  #toast-layer{position:absolute; left:0; right:0; top:8px; display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; z-index:8;}
+  .toast{background:rgba(20,13,6,0.92); border:1px solid var(--wax-line); color:var(--ink); font-size:12px; padding:6px 13px; border-radius:999px; animation:toastIn 2.1s ease forwards;}
+  @keyframes toastIn{0%{opacity:0; transform:translateY(-6px);} 10%{opacity:1; transform:translateY(0);} 80%{opacity:1;} 100%{opacity:0; transform:translateY(-4px);}}
+
+  #float-layer{position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:6;}
+  .floater{position:absolute; font-size:14px; font-weight:700; transform:translate(-50%,-50%); animation:floatUp 1.1s ease forwards;}
+  @keyframes floatUp{0%{opacity:1; transform:translate(-50%,-50%);} 100%{opacity:0; transform:translate(-50%,-146%);}}
+
+  footer{flex-shrink:0; padding:8px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:8px; z-index:5;}
+  .btn-row{display:flex; gap:8px;}
+  .action-btn{flex:1; border:none; border-radius:15px; padding:11px 6px 9px; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:1px; position:relative; overflow:hidden;}
+  .action-btn .big{font-size:13px; font-weight:700;}
+  .action-btn .small{font-size:9px; opacity:0.85;}
+  .action-btn:active{transform:scale(0.96);}
+  #work-btn{background:linear-gradient(160deg,#d9765c,#a8402c); color:#fff2e8; box-shadow:0 4px 12px rgba(168,64,44,0.3), inset 0 1px 0 rgba(255,255,255,0.25);}
+  #gather-btn{background:linear-gradient(160deg,#ffdf8a,#e8a832); color:#3a2405; box-shadow:0 4px 12px rgba(232,168,50,0.28), inset 0 1px 0 rgba(255,255,255,0.4);}
+  #sell-btn{background:linear-gradient(160deg,#8fe37a,#4a9e3a); color:#0c2408; box-shadow:0 4px 12px rgba(74,158,58,0.3), inset 0 1px 0 rgba(255,255,255,0.3);}
+  #worker-btn{background:linear-gradient(160deg,#c9a5ff,#7a4fd6); color:#1c0d3a; box-shadow:0 4px 12px rgba(122,79,214,0.3), inset 0 1px 0 rgba(255,255,255,0.3);}
+  .action-btn:disabled{filter:grayscale(0.5) brightness(0.7); opacity:0.6;}
+  .badge-count{position:absolute; top:5px; right:7px; font-size:9px; background:rgba(0,0,0,0.25); padding:1px 5px; border-radius:999px;}
+
+  #hint{position:absolute; bottom:6px; left:0; right:0; text-align:center; font-size:10px; color:var(--ink-faint); z-index:5; pointer-events:none; transition:color 0.4s;}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="title-block">
+      <div class="logo display">HONEYWORKS</div>
+      <div class="sub">일하고 꽃가루를 모아 벌집을 짓고 · 꿀을 팔아 성장시킨다</div>
+    </div>
+    <button id="reset-btn">처음부터</button>
+  </header>
+
+  <div id="resbar">
+    <div class="res-chip labor"><div class="ic">💪</div><div class="valwrap"><div class="val" id="labor-val">0</div><div class="lbl">노동력</div></div></div>
+    <div class="res-chip pollen"><div class="ic">🌼</div><div class="valwrap"><div class="val" id="pollen-val">0</div><div class="lbl">꽃가루</div></div></div>
+    <div class="res-chip honey"><div class="ic">🍯</div><div class="valwrap"><div class="val" id="honey-val">0.0</div><div class="lbl">저장된 꿀</div></div></div>
+    <div class="res-chip money"><div class="ic">💰</div><div class="valwrap"><div class="val" id="money-val">0</div><div class="lbl">돈</div></div></div>
+  </div>
+
+  <div id="stage">
+    <svg id="hive-svg">
+      <defs>
+        <linearGradient id="waxRim" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#7a5530"/>
+          <stop offset="55%" stop-color="#4a3016"/>
+          <stop offset="100%" stop-color="#241708"/>
+        </linearGradient>
+        <radialGradient id="waxWell" cx="35%" cy="30%" r="75%">
+          <stop offset="0%" stop-color="#2b1c0c"/>
+          <stop offset="100%" stop-color="#120b04"/>
+        </radialGradient>
+        <radialGradient id="honeyGlow1" cx="35%" cy="28%" r="75%">
+          <stop offset="0%" stop-color="#fff3c4"/>
+          <stop offset="45%" stop-color="#ffcf4d"/>
+          <stop offset="100%" stop-color="#c9600f"/>
+        </radialGradient>
+        <radialGradient id="honeyGlow2" cx="35%" cy="28%" r="75%">
+          <stop offset="0%" stop-color="#fff7d6"/>
+          <stop offset="40%" stop-color="#ffb347"/>
+          <stop offset="70%" stop-color="#e8720f"/>
+          <stop offset="100%" stop-color="#a83e05"/>
+        </radialGradient>
+        <radialGradient id="honeyGlow3" cx="35%" cy="28%" r="75%">
+          <stop offset="0%" stop-color="#ffffff"/>
+          <stop offset="30%" stop-color="#ffe37a"/>
+          <stop offset="60%" stop-color="#ffb020"/>
+          <stop offset="100%" stop-color="#8a3d00"/>
+        </radialGradient>
+        <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
+          <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur"/>
+          <feMerge>
+            <feMergeNode in="blur"/>
+            <feMergeNode in="SourceGraphic"/>
+          </feMerge>
+        </filter>
+      </defs>
+      <g id="world"></g>
+    </svg>
+    <div id="float-layer"></div>
+    <div id="toast-layer"></div>
+    <div id="hint">빈 칸을 눌러 짓고 · 지어진 칸을 눌러 꿀을 채우고 · 채운 방을 눌러 업그레이드</div>
+  </div>
+
+  <footer>
+    <div class="btn-row">
+      <button class="action-btn" id="work-btn"><span class="big">💪 일하기</span><span class="small">노동력 +1</span></button>
+      <button class="action-btn" id="gather-btn"><span class="big">🐝 채집 보내기</span><span class="small" id="gather-sub">노동력 8 → 꽃가루</span><span class="badge-count" id="fly-badge" style="display:none;">0/3</span></button>
+    </div>
+    <div class="btn-row">
+      <button class="action-btn" id="sell-btn"><span class="big">💰 꿀 팔기</span><span class="small" id="sell-sub">꿀 → 돈</span></button>
+      <button class="action-btn" id="worker-btn"><span class="big">👷 일꾼 고용</span><span class="small" id="worker-sub">패시브 노동력</span></button>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  const SIZE = 40;
+  const MAX_FLYING = 3;
+  const GATHER_LABOR_COST = 8;
+  const GATHER_DURATION_MIN = 1800;
+  const GATHER_DURATION_MAX = 2600;
+  const GATHER_POLLEN_MIN = 4;
+  const GATHER_POLLEN_MAX = 8;
+  const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
+  const SAVE_KEY = 'hive-save-v2';
+  const HONEY_PRICE = 5;
+  const WORKER_LABOR_RATE = 0.45;
+
+  const OUT_R = SIZE*0.97, IN_R = SIZE*0.76, RING_R = SIZE*0.86;
+  function ptsFor(r){
+    const pts=[];
+    for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i); pts.push((r*Math.cos(a)).toFixed(2)+','+(r*Math.sin(a)).toFixed(2)); }
+    return pts.join(' ');
+  }
+  const OUTER_PTS = ptsFor(OUT_R), INNER_PTS = ptsFor(IN_R), RING_PTS = ptsFor(RING_R);
+
+  let cells = new Map();
+  let labor=0, pollen=0, honeyStock=0, money=0, workers=0;
+  let flying=[];
+  let camera={x:0,y:0,scale:1}, camTarget={x:0,y:0,scale:1};
+  let saveTimer=null;
+  let elCache = new Map();
+
+  function key(q,r){ return q+','+r; }
+  function ensureCell(q,r){ const k=key(q,r); if(!cells.has(k)) cells.set(k,{q,r,built:false,filled:false,level:1}); return cells.get(k); }
+  function neighbors(q,r){ return DIRS.map(([dq,dr])=>[q+dq,r+dr]); }
+  function builtCount(){ let n=0; for(const c of cells.values()) if(c.built) n++; return n; }
+  function filledCount(){ let n=0; for(const c of cells.values()) if(c.filled) n++; return n; }
+  function buildCost(){ const b=builtCount(); return {labor:Math.floor(10+b*3.2), pollen:Math.floor(5+b*1.6)}; }
+  function fillCost(){ const f=filledCount(); return {pollen:Math.floor(6+f*1.2)}; }
+  function upgradeCost(level){ return Math.floor(35*Math.pow(2.3,level-1)); }
+  function workerCost(){ return Math.floor(22*Math.pow(1.33,workers)); }
+
+  function growableKeys(){
+    const set=new Set();
+    for(const c of cells.values()){
+      if(!c.built) continue;
+      for(const [nq,nr] of neighbors(c.q,c.r)){
+        const nk=key(nq,nr); const nc=cells.get(nk);
+        if(!nc || !nc.built) set.add(nk);
+      }
+    }
+    return set;
+  }
+
+  function freshState(){
+    cells=new Map(); labor=0; pollen=0; honeyStock=0; money=0; workers=0; flying=[];
+    ensureCell(0,0).built=true;
+  }
+
+  async function loadState(){
+    try{
+      const res = await window.storage.get(SAVE_KEY, false);
+      if(res && res.value){
+        const s = JSON.parse(res.value);
+        cells=new Map();
+        for(const c of s.cells){ cells.set(key(c.q,c.r), {q:c.q,r:c.r,built:!!c.built,filled:!!c.filled,level:c.level||1}); }
+        labor=s.labor||0; pollen=s.pollen||0; honeyStock=s.honeyStock||0; money=s.money||0; workers=s.workers||0;
+        if(!cells.size) freshState();
+      } else freshState();
+    }catch(e){ freshState(); }
+    fitCamera(true);
+  }
+  function saveStateNow(){
+    try{
+      const s={cells:Array.from(cells.values()), labor, pollen, honeyStock, money, workers};
+      window.storage.set(SAVE_KEY, JSON.stringify(s), false).catch(()=>{});
+    }catch(e){}
+  }
+  function saveStateSoon(){ if(saveTimer) clearTimeout(saveTimer); saveTimer=setTimeout(saveStateNow, 900); }
+
+  const svg = document.getElementById('hive-svg');
+  const world = document.getElementById('world');
+  const NS = 'http://www.w3.org/2000/svg';
+  let cw=0, ch=0;
+
+  function resize(){
+    const stage = document.getElementById('stage');
+    cw = stage.clientWidth; ch = stage.clientHeight;
+    svg.setAttribute('width', cw); svg.setAttribute('height', ch);
+  }
+  window.addEventListener('resize', resize);
+
+  function hexToPixel(q,r){ return { x: SIZE*1.5*q, y: SIZE*(Math.sqrt(3)/2*q + Math.sqrt(3)*r) }; }
+
+  function worldToScreen(x,y){ return { x: cw/2 + (x-camera.x)*camera.scale, y: ch/2 + (y-camera.y)*camera.scale }; }
+
+  function fitCamera(instant){
+    const keys = new Set(cells.keys());
+    for(const k of growableKeys()) keys.add(k);
+    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
+    for(const k of keys){
+      const c = cells.get(k) || {q:parseInt(k.split(',')[0]), r:parseInt(k.split(',')[1])};
+      const p = hexToPixel(c.q,c.r);
+      minX=Math.min(minX,p.x-SIZE); maxX=Math.max(maxX,p.x+SIZE);
+      minY=Math.min(minY,p.y-SIZE); maxY=Math.max(maxY,p.y+SIZE);
+    }
+    const w=maxX-minX, h=maxY-minY, pad=1.35;
+    const scale = Math.min(cw/(w*pad), ch/(h*pad), 2.6);
+    camTarget.scale = Math.max(scale, 0.35);
+    camTarget.x = (minX+maxX)/2; camTarget.y=(minY+maxY)/2;
+    if(instant){ camera.x=camTarget.x; camera.y=camTarget.y; camera.scale=camTarget.scale; }
+  }
+
+  function makeHexEl(k){
+    const g = document.createElementNS(NS,'g');
+    g.setAttribute('class','hexcell');
+    g.dataset.key = k;
+    const outer = document.createElementNS(NS,'polygon');
+    outer.setAttribute('class','outer'); outer.setAttribute('points', OUTER_PTS);
+    const inner = document.createElementNS(NS,'polygon');
+    inner.setAttribute('class','inner'); inner.setAttribute('points', INNER_PTS);
+    const ring = document.createElementNS(NS,'polygon');
+    ring.setAttribute('class','ring'); ring.setAttribute('points', RING_PTS);
+    const shine = document.createElementNS(NS,'ellipse');
+    shine.setAttribute('class','shine');
+    shine.setAttribute('cx', -IN_R*0.28); shine.setAttribute('cy', -IN_R*0.35);
+    shine.setAttribute('rx', IN_R*0.32); shine.setAttribute('ry', IN_R*0.18);
+    shine.setAttribute('transform','rotate(-25)');
+    g.appendChild(outer); g.appendChild(inner); g.appendChild(ring); g.appendChild(shine);
+    g.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); const [q,r]=k.split(',').map(Number); handleTap(q,r); });
+    world.appendChild(g);
+    return g;
+  }
+
+  function syncHexElements(){
+    const grow = growableKeys();
+    const activeKeys = new Set(cells.keys());
+    for(const k of grow) activeKeys.add(k);
+
+    for(const [k, el] of elCache){
+      if(!activeKeys.has(k)){ el.remove(); elCache.delete(k); }
+    }
+    for(const k of activeKeys){
+      let el = elCache.get(k);
+      if(!el){ el = makeHexEl(k); elCache.set(k, el); }
+      const c = cells.get(k);
+      const [q,r] = k.split(',').map(Number);
+      const p = hexToPixel(q,r);
+      el.setAttribute('transform', `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
+      const built = c && c.built;
+      const filled = c && c.filled;
+      const level = c ? c.level : 1;
+      el.classList.toggle('ghost', !built);
+      el.classList.toggle('filled', !!filled);
+      el.classList.toggle('lv2', !!(filled && level===2));
+      el.classList.toggle('lv3', !!(filled && level===3));
+    }
+  }
+
+  function updateCameraTransform(){
+    world.setAttribute('transform', `translate(${cw/2} ${ch/2}) scale(${camera.scale}) translate(${-camera.x} ${-camera.y})`);
+  }
+
+  // ---------------- bees ----------------
+  let beeEls = new Map();
+  function beeEl(id){
+    let g = beeEls.get(id);
+    if(g) return g;
+    g = document.createElementNS(NS,'g');
+    g.innerHTML = `
+      <ellipse cx="0" cy="0" rx="7" ry="5" fill="#f2c334"/>
+      <rect x="-3.5" y="-5" width="2.6" height="10" fill="#211405"/>
+      <rect x="1" y="-5" width="2.6" height="10" fill="#211405"/>
+      <ellipse cx="-4" cy="-6" rx="5" ry="3" fill="rgba(255,255,255,0.55)" transform="rotate(20 -4 -6)"/>
+      <ellipse cx="4" cy="-6" rx="5" ry="3" fill="rgba(255,255,255,0.55)" transform="rotate(-20 4 -6)"/>
+    `;
+    world.appendChild(g);
+    beeEls.set(id, g);
+    return g;
+  }
+  function removeBeeEl(id){ const g=beeEls.get(id); if(g){ g.remove(); beeEls.delete(id);} }
+
+  function updateBees(){
+    const now = performance.now();
+    for(const b of flying){
+      const t = Math.min(1,(now-b.start)/b.dur);
+      const ease = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
+      const dist = 90*Math.sin(Math.min(t,1)*Math.PI) + 10;
+      const bx = Math.cos(b.angle)*dist;
+      const by = Math.sin(b.angle)*dist - 30*Math.sin(ease*Math.PI);
+      const g = beeEl(b.id);
+      g.setAttribute('transform', `translate(${bx.toFixed(1)} ${by.toFixed(1)})`);
+    }
+  }
+
+  // ---------------- floaters ----------------
+  const floatLayer = document.getElementById('float-layer');
+  function pushFloat(worldX, worldY, text, color){
+    const s = worldToScreen(worldX, worldY);
+    const el = document.createElement('div');
+    el.className='floater'; el.textContent=text; el.style.color=color;
+    el.style.left = s.x+'px'; el.style.top = s.y+'px';
+    floatLayer.appendChild(el);
+    setTimeout(()=>el.remove(), 1150);
+  }
+
+  // ---------------- interaction ----------------
+  function handleTap(q,r){
+    const k = key(q,r);
+    const c = cells.get(k);
+    if(c && c.built){
+      if(!c.filled) tryFill(c);
+      else tryUpgrade(c);
+      return;
+    }
+    const grow = growableKeys();
+    if(grow.has(k)) tryBuild(q,r);
+  }
+
+  function tryBuild(q,r){
+    const cost = buildCost();
+    if(labor < cost.labor || pollen < cost.pollen){
+      toast(`짓기엔 부족해요 — 노동력 ${cost.labor} / 꽃가루 ${cost.pollen} 필요`);
+      return;
+    }
+    labor -= cost.labor; pollen -= cost.pollen;
+    const c = ensureCell(q,r); c.built = true;
+    const p = hexToPixel(q,r);
+    pushFloat(p.x,p.y-10,'새 방 완성!','#ffe6a8');
+    fitCamera(false); syncHexElements(); refreshUI(); saveStateSoon();
+  }
+
+  function tryFill(c){
+    const cost = fillCost();
+    if(pollen < cost.pollen){ toast(`꿀을 채우려면 꽃가루 ${cost.pollen}이 필요해요`); return; }
+    pollen -= cost.pollen; c.filled = true; c.level = 1;
+    const p = hexToPixel(c.q,c.r);
+    pushFloat(p.x,p.y-10,'+ 꿀 완성 🍯','#ffcf4d');
+    syncHexElements(); refreshUI(); saveStateSoon();
+  }
+
+  function tryUpgrade(c){
+    if(c.level >= 3){ toast('이미 최고 등급 방이에요 ✨'); return; }
+    const cost = upgradeCost(c.level);
+    if(money < cost){ toast(`업그레이드에 돈 ${cost}이 필요해요`); return; }
+    money -= cost; c.level += 1;
+    const p = hexToPixel(c.q,c.r);
+    pushFloat(p.x,p.y-10, c.level===2?'방 업그레이드! 🥉':'방 업그레이드! 🥇', '#ffd700');
+    syncHexElements(); refreshUI(); saveStateSoon();
+  }
+
+  // ---------------- toasts ----------------
+  const toastLayer = document.getElementById('toast-layer');
+  function toast(msg){
+    const el = document.createElement('div'); el.className='toast'; el.textContent=msg;
+    toastLayer.appendChild(el);
+    setTimeout(()=>el.remove(), 2150);
+  }
+
+  // ---------------- buttons ----------------
+  const workBtn = document.getElementById('work-btn');
+  const gatherBtn = document.getElementById('gather-btn');
+  const sellBtn = document.getElementById('sell-btn');
+  const workerBtn = document.getElementById('worker-btn');
+  const flyBadge = document.getElementById('fly-badge');
+
+  workBtn.addEventListener('click', ()=>{
+    labor += 1;
+    pushFloat(0, -SIZE*2.2, '+1', '#ffb199');
+    refreshUI(); saveStateSoon();
+  });
+
+  gatherBtn.addEventListener('click', ()=>{
+    if(flying.length >= MAX_FLYING){ toast(`이미 ${MAX_FLYING}마리가 채집 중이에요`); return; }
+    if(labor < GATHER_LABOR_COST){ toast(`노동력 ${GATHER_LABOR_COST}이 필요해요`); return; }
+    labor -= GATHER_LABOR_COST;
+    const dur = GATHER_DURATION_MIN + Math.random()*(GATHER_DURATION_MAX-GATHER_DURATION_MIN);
+    flying.push({ id: Math.random().toString(36).slice(2), start: performance.now(), dur, angle: Math.random()*Math.PI*2 });
+    refreshUI(); saveStateSoon();
+  });
+
+  sellBtn.addEventListener('click', ()=>{
+    const amt = Math.floor(honeyStock*10)/10;
+    if(amt <= 0){ toast('팔 꿀이 없어요 — 방에 꿀을 채워보세요'); return; }
+    const gained = Math.floor(amt*HONEY_PRICE);
+    money += gained; honeyStock -= amt;
+    pushFloat(0, -SIZE*1.4, `+${gained} 💰`, '#8fe37a');
+    refreshUI(); saveStateSoon();
+  });
+
+  workerBtn.addEventListener('click', ()=>{
+    const cost = workerCost();
+    if(money < cost){ toast(`일꾼 고용엔 돈 ${cost}이 필요해요`); return; }
+    money -= cost; workers += 1;
+    toast(`일꾼을 고용했어요! (총 ${workers}명)`);
+    refreshUI(); saveStateSoon();
+  });
+
+  document.getElementById('reset-btn').addEventListener('click', ()=>{
+    if(confirm('정말 처음부터 다시 시작할까요? 저장된 벌집이 사라져요.')){
+      freshState(); fitCamera(true); syncHexElements(); refreshUI(); saveStateNow();
+      toast('새 벌집을 시작해요 🐝');
+    }
+  });
+
+  function processFlying(){
+    const now = performance.now();
+    const done = flying.filter(b => now-b.start >= b.dur);
+    if(done.length){
+      flying = flying.filter(b => now-b.start < b.dur);
+      for(const b of done){
+        removeBeeEl(b.id);
+        const gain = Math.floor(GATHER_POLLEN_MIN + Math.random()*(GATHER_POLLEN_MAX-GATHER_POLLEN_MIN+1));
+        pollen += gain;
+        pushFloat(0,-10,`+${gain} 🌼`,'#fff0b8');
+      }
+      refreshUI(); saveStateSoon();
+    }
+  }
+
+  // ---------------- UI refresh ----------------
+  function refreshUI(){
+    document.getElementById('labor-val').textContent = Math.floor(labor);
+    document.getElementById('pollen-val').textContent = Math.floor(pollen);
+    document.getElementById('honey-val').textContent = honeyStock.toFixed(1);
+    document.getElementById('money-val').textContent = Math.floor(money);
+    document.getElementById('gather-sub').textContent = `노동력 ${GATHER_LABOR_COST} → 꽃가루`;
+    document.getElementById('sell-sub').textContent = `1꿀=${HONEY_PRICE}돈 판매`;
+    document.getElementById('worker-sub').textContent = `${workerCost()}돈 · +${WORKER_LABOR_RATE}/초 (보유 ${workers})`;
+    if(flying.length>0){ flyBadge.style.display='block'; flyBadge.textContent = `${flying.length}/${MAX_FLYING}`; }
+    else flyBadge.style.display='none';
+  }
+
+  // ---------------- main loop ----------------
+  let lastT = performance.now();
+  function loop(t){
+    const dt = Math.min(0.05,(t-lastT)/1000);
+    lastT = t;
+
+    if(workers>0){ labor += dt*workers*WORKER_LABOR_RATE; }
+    const fc = filledCount();
+    if(fc>0){
+      let rate=0;
+      for(const c of cells.values()){
+        if(!c.filled) continue;
+        rate += c.level===3?0.5:(c.level===2?0.28:0.12);
+      }
+      honeyStock += dt*rate;
+    }
+
+    camera.x += (camTarget.x-camera.x)*Math.min(1,dt*4);
+    camera.y += (camTarget.y-camera.y)*Math.min(1,dt*4);
+    camera.scale += (camTarget.scale-camera.scale)*Math.min(1,dt*4);
+    updateCameraTransform();
+    processFlying();
+    updateBees();
+
+    if(Math.floor(t/250) !== Math.floor(lastT/250)) refreshUI();
+
+    requestAnimationFrame(loop);
+  }
+
+  async function boot(){
+    resize();
+    await loadState();
+    syncHexElements();
+    updateCameraTransform();
+    refreshUI();
+    requestAnimationFrame(loop);
+  }
+  boot();
+})();
+</script>
+</body>
+</html>
