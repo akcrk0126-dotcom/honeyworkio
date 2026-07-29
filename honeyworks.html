@@ -3,538 +3,1750 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>HONEYWORKS — 벌집 짓기</title>
+<title>HONEYWORKS 🍯</title>
+<link rel="preconnect" href="https://webfontworld.github.io">
 <style>
-  :root{
-    --bg-0:#120b05;
-    --bg-1:#1c1309;
-    --wax:#3d2b16;
-    --wax-line:#6b4d29;
-    --honey-1:#ffcf4d;
-    --honey-2:#f2932b;
-    --ink:#f4e6c8;
-    --ink-dim:#b39d78;
-    --ink-faint:#7a6647;
-    --accent:#ffd873;
-    --danger:#e0654f;
-    --money:#8fe37a;
-  }
-  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
-  html,body{
-    height:100%; margin:0; overflow:hidden;
-    background:radial-gradient(ellipse at 50% 0%, var(--bg-1) 0%, var(--bg-0) 70%);
-    font-family:-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Malgun Gothic",sans-serif;
-    color:var(--ink);
-    touch-action:none;
-  }
-  .display{font-weight:900; letter-spacing:0.5px;}
-  #app{position:fixed; inset:0; display:flex; flex-direction:column;}
+@font-face{
+  font-family:'Galmuri9';
+  src:url('https://webfontworld.github.io/galmuri/Galmuri9.woff2') format('woff2');
+  font-weight:normal; font-style:normal; font-display:swap;
+}
+*{box-sizing:border-box; -webkit-tap-highlight-color:transparent; user-select:none;}
+html,body{
+  margin:0; padding:0; width:100%; height:100%; overflow:hidden;
+  font-family:'Galmuri9','DungGeunMo',-apple-system,'Malgun Gothic',sans-serif;
+  background:#FFF6E5; touch-action:none; color:#5C4326;
+}
+#app{position:relative; width:100vw; height:100vh; display:flex; flex-direction:column;}
 
-  header{padding:10px 14px 6px; display:flex; align-items:flex-start; justify-content:space-between; flex-shrink:0; z-index:5;}
-  .title-block{display:flex; flex-direction:column; gap:1px;}
-  .title-block .logo{font-size:21px; color:var(--accent); text-shadow:0 0 14px rgba(255,204,77,0.35);}
-  .title-block .sub{font-size:10px; color:var(--ink-faint); letter-spacing:0.3px;}
-  #reset-btn{background:none; border:1px solid var(--wax-line); color:var(--ink-faint); border-radius:8px; padding:5px 9px; font-size:10px; font-family:inherit;}
+/* ===== 상단 자원바 ===== */
+#topbar{
+  display:flex; align-items:center; gap:5px; padding:8px 5px;
+  background:
+    repeating-linear-gradient(135deg, rgba(255,255,255,.20) 0 10px, rgba(255,255,255,0) 10px 20px),
+    linear-gradient(#FFEDC0,#FFCE6E);
+  border-bottom:4px solid #E0A83E; z-index:50; flex-wrap:nowrap;
+  overflow-x:auto; box-shadow:0 3px 8px rgba(180,120,30,.25);
+}
+.res{
+  display:flex; align-items:center; gap:4px; background:#FFFBF0;
+  border:2px solid #E8B858; border-radius:18px; padding:3px 8px 3px 3px;
+  font-size:11px; white-space:nowrap; flex-shrink:0;
+  box-shadow:0 2px 0 #D8A64A, inset 0 1px 0 #fff;
+}
+.res .icon{
+  font-size:12px; width:20px; height:20px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; background:#FFF3D8; box-shadow:inset 0 -2px 0 rgba(0,0,0,.08);
+}
+.res.labor .icon{background:#F0DFC8;}
+.res.pollen .icon{background:#FFD3E4;}
+.res.honey .icon{background:#FFE29B;}
+.res.money .icon{background:#CDF3CD;}
+.res.gems .icon{background:#DCD1FF;}
+.res.tickets .icon{background:#FFD8B0;}
+.res .val{font-weight:bold; min-width:16px;}
+#settingsBtn{
+  margin-left:auto; flex-shrink:0; background:linear-gradient(#FFB37A,#FF8F4D); color:#fff; border:2px solid #D97840;
+  border-radius:12px; padding:7px 11px; font-size:16px; box-shadow:0 3px 0 #C46530; cursor:pointer;
+}
+#settingsBtn:active{transform:translateY(2px); box-shadow:0 1px 0 #C46530;}
 
-  #resbar{display:flex; gap:7px; padding:0 12px 8px; flex-shrink:0; z-index:5; overflow-x:auto;}
-  .res-chip{display:flex; align-items:center; gap:5px; background:linear-gradient(180deg, rgba(61,43,22,0.9), rgba(30,21,10,0.9)); border:1px solid var(--wax-line); border-radius:999px; padding:5px 10px 5px 7px; flex-shrink:0;}
-  .res-chip .ic{width:19px; height:19px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px;}
-  .res-chip.labor .ic{background:rgba(224,101,79,0.18);}
-  .res-chip.pollen .ic{background:rgba(255,216,115,0.18);}
-  .res-chip.honey .ic{background:rgba(255,207,77,0.22);}
-  .res-chip.money .ic{background:rgba(143,227,122,0.2);}
-  .res-chip .val{font-size:13px; font-weight:700; font-variant-numeric:tabular-nums;}
-  .res-chip .lbl{font-size:8.5px; color:var(--ink-faint); margin-top:-2px;}
-  .res-chip .valwrap{display:flex; flex-direction:column; line-height:1.05;}
+/* ===== 뷰포트 & 슬라이더 ===== */
+#viewport{flex:1; position:relative; overflow:hidden;}
+#slider{
+  position:absolute; top:0; left:0; height:100%; width:200%;
+  display:flex; transition:transform .55s cubic-bezier(.65,0,.35,1);
+}
+.screen{
+  width:50%; height:100%; position:relative; overflow:hidden;
+  display:flex; flex-direction:column; align-items:center; justify-content:flex-start;
+}
+#hiveScreen{
+  background:
+    radial-gradient(circle at 50% -8%, rgba(255,255,255,.6), transparent 55%),
+    radial-gradient(circle at 50% 22%, #FFF6DC, #FFDE95 78%);
+}
+#fieldScreen{
+  position:relative;
+  background:radial-gradient(circle at 50% -8%, rgba(255,255,255,.55), transparent 50%),
+    radial-gradient(circle at 50% 18%, #F3FFE8, #B7E89C 85%);
+  transition:background 1s ease;
+}
+#fieldScreen::after{
+  content:''; position:absolute; left:0; right:0; bottom:0; height:13%;
+  background:linear-gradient(#8FCB6E,#6FAE4E); border-top:3px solid #5C9440; z-index:1;
+}
+.screenTitle{margin:8px 0 2px; font-size:15px; font-weight:bold; color:#8A5A22; text-shadow:1px 1px 0 #fff8; z-index:2;}
 
-  #stage{position:relative; flex:1; min-height:0;}
-  svg#hive-svg{position:absolute; inset:0; width:100%; height:100%; display:block;}
+/* 화살표 버튼 */
+.navArrow{
+  position:absolute; top:50%; transform:translateY(-50%);
+  width:40px; height:68px; background:linear-gradient(#FFFEF8,#FFF1D2); border:3px solid #E8B858;
+  border-radius:16px; font-size:20px; display:flex; align-items:center; justify-content:center;
+  color:#B87A2A; z-index:30; cursor:pointer; font-weight:bold;
+  box-shadow:0 4px 0 #D8A64A, 0 6px 10px rgba(140,90,20,.22);
+}
+.navArrow:active{transform:translateY(calc(-50% + 3px)); box-shadow:0 1px 0 #D8A64A;}
+#toFieldArrow{right:6px;}
+#toHiveArrow{left:6px;}
 
-  .hexcell{cursor:pointer;}
-  .hexcell .outer{fill:url(#waxRim); stroke:#160e06; stroke-width:1.4;}
-  .hexcell .inner{fill:url(#waxWell); stroke:none;}
-  .hexcell.filled .inner{fill:url(#honeyGlow1);}
-  .hexcell.filled.lv2 .inner{fill:url(#honeyGlow2);}
-  .hexcell.filled.lv3 .inner{fill:url(#honeyGlow3);}
-  .hexcell.filled .inner{filter:url(#softGlow);}
-  .hexcell .ring{fill:none; stroke-width:2.2; opacity:0;}
-  .hexcell.lv2 .ring{stroke:#cd7f32; opacity:0.9;}
-  .hexcell.lv3 .ring{stroke:#ffd700; opacity:0.95;}
-  .hexcell .shine{fill:rgba(255,255,255,0.5); opacity:0;}
-  .hexcell.filled .shine{opacity:0.55;}
-  .hexcell.ghost .outer{fill:rgba(255,216,115,0.04); stroke:#ffd873; stroke-width:1.6; stroke-dasharray:5 5; animation:ghostPulse 1.8s ease-in-out infinite;}
-  .hexcell.filled .inner{animation:honeyPulse 2.6s ease-in-out infinite;}
-  @keyframes ghostPulse{0%,100%{opacity:0.55;} 50%{opacity:0.95;}}
-  @keyframes honeyPulse{0%,100%{filter:url(#softGlow) brightness(1);} 50%{filter:url(#softGlow) brightness(1.12);}}
+/* ===== 벌집 그리드 (지그재그 허니콤, 3D 왁스 질감) ===== */
+#hiveGrid{
+  display:flex; flex-direction:column; align-items:center; gap:0;
+  padding:14px 10px 6px; width:100%; overflow-y:auto; flex:1; z-index:2; position:relative;
+  background-image:radial-gradient(rgba(232,184,88,.3) 1.5px, transparent 1.5px);
+  background-size:16px 16px;
+}
+.hiveRow{display:flex; gap:8px; margin-top:-15px;}
+.hiveRow:first-child{margin-top:0;}
+.hiveRowShift{margin-left:39px;}
+.hexSlot{
+  position:relative; width:70px; height:80px; flex-shrink:0;
+  background:radial-gradient(circle at 32% 24%, #FFF6D4 0%, #FFC55C 55%, #E8961E 85%, #C97D14 100%);
+  clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);
+  filter:drop-shadow(0 4px 0 #C97D14) drop-shadow(0 6px 5px rgba(120,70,10,.28));
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  cursor:pointer; transition:transform .15s;
+}
+.hexSlot.empty{
+  background:radial-gradient(circle at 32% 24%, #FFFAEC 0%, #FFE3A0 70%, #F0C878 100%);
+  filter:drop-shadow(0 4px 0 #E0C088) drop-shadow(0 5px 4px rgba(120,70,10,.14));
+  opacity:.85;
+}
+.hexSlot.empty .plus{font-size:22px; color:#D9A85A; font-weight:bold;}
+.hexSlot .beeEmoji{font-size:22px; transition:transform .3s; filter:drop-shadow(0 2px 1px rgba(0,0,0,.18));}
+.hexSlot .beeGradeTag{font-size:7px; font-weight:bold; color:#5C3213; background:rgba(255,255,255,.65); border-radius:5px; padding:0 3px;}
+.hexSlot .phaseTag{
+  position:absolute; bottom:-5px; font-size:6.5px; background:#fff; border:1px solid #E8B858;
+  border-radius:6px; padding:1px 5px; color:#B87A2A; box-shadow:0 1px 0 #D8A64A;
+}
+.hexSlot.bobbing .beeEmoji{animation:bob 1.6s ease-in-out infinite;}
+.hexSlot.away{opacity:.55;}
+.hexSlot.away .beeEmoji{filter:grayscale(.5);}
+.hexSlot:active{transform:scale(.93);}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(0deg);}50%{transform:translateY(-4px) rotate(-4deg);}}
 
-  #toast-layer{position:absolute; left:0; right:0; top:8px; display:flex; flex-direction:column; align-items:center; gap:6px; pointer-events:none; z-index:8;}
-  .toast{background:rgba(20,13,6,0.92); border:1px solid var(--wax-line); color:var(--ink); font-size:12px; padding:6px 13px; border-radius:999px; animation:toastIn 2.1s ease forwards;}
-  @keyframes toastIn{0%{opacity:0; transform:translateY(-6px);} 10%{opacity:1; transform:translateY(0);} 80%{opacity:1;} 100%{opacity:0; transform:translateY(-4px);}}
+#workBtnWrap{padding:8px; width:100%; display:flex; justify-content:center; z-index:2; position:relative;}
+#workBtn{
+  background:linear-gradient(#FFCB84,#FF9D3E); border:3px solid #D97840; color:#5C3213; font-weight:bold;
+  border-radius:16px; padding:10px 26px; font-size:12px; cursor:pointer;
+  box-shadow:0 4px 0 #C46530, inset 0 1px 0 rgba(255,255,255,.65);
+}
+#workBtn:active{transform:translateY(3px); box-shadow:0 1px 0 #C46530;}
 
-  #float-layer{position:absolute; inset:0; pointer-events:none; overflow:hidden; z-index:6;}
-  .floater{position:absolute; font-size:14px; font-weight:700; transform:translate(-50%,-50%); animation:floatUp 1.1s ease forwards;}
-  @keyframes floatUp{0%{opacity:1; transform:translate(-50%,-50%);} 100%{opacity:0; transform:translate(-50%,-146%);}}
+/* ===== 꽃밭 ===== */
+#flowerField{position:relative; width:100%; flex:1; overflow:hidden; z-index:2;}
+.flower{
+  position:absolute; font-size:28px; transform:translate(-50%,-50%);
+  animation:sway 2.4s ease-in-out infinite; filter:drop-shadow(0 3px 2px rgba(30,60,10,.2));
+}
+@keyframes sway{0%,100%{transform:translate(-50%,-50%) rotate(-6deg);}50%{transform:translate(-50%,-50%) rotate(6deg);}}
+.flyingBee{
+  position:absolute; font-size:22px; z-index:20; pointer-events:none;
+  transition:left 1.1s ease-in-out, top 1.1s ease-in-out, opacity .4s;
+  filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));
+}
+.floatText{
+  position:absolute; font-size:10.5px; font-weight:bold; z-index:40; pointer-events:none;
+  animation:floatUp 1.1s ease-out forwards;
+}
+@keyframes floatUp{0%{opacity:1; transform:translate(-50%,0);}100%{opacity:0; transform:translate(-50%,-38px);}}
+.sparkle{position:absolute; font-size:14px; pointer-events:none; animation:sparkle .8s ease-out forwards;}
+@keyframes sparkle{0%{opacity:1; transform:translate(-50%,-50%) scale(.4);}100%{opacity:0; transform:translate(-50%,-90%) scale(1.3);}}
 
-  footer{flex-shrink:0; padding:8px 12px calc(10px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:8px; z-index:5;}
-  .btn-row{display:flex; gap:8px;}
-  .action-btn{flex:1; border:none; border-radius:15px; padding:11px 6px 9px; font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:1px; position:relative; overflow:hidden;}
-  .action-btn .big{font-size:13px; font-weight:700;}
-  .action-btn .small{font-size:9px; opacity:0.85;}
-  .action-btn:active{transform:scale(0.96);}
-  #work-btn{background:linear-gradient(160deg,#d9765c,#a8402c); color:#fff2e8; box-shadow:0 4px 12px rgba(168,64,44,0.3), inset 0 1px 0 rgba(255,255,255,0.25);}
-  #gather-btn{background:linear-gradient(160deg,#ffdf8a,#e8a832); color:#3a2405; box-shadow:0 4px 12px rgba(232,168,50,0.28), inset 0 1px 0 rgba(255,255,255,0.4);}
-  #sell-btn{background:linear-gradient(160deg,#8fe37a,#4a9e3a); color:#0c2408; box-shadow:0 4px 12px rgba(74,158,58,0.3), inset 0 1px 0 rgba(255,255,255,0.3);}
-  #worker-btn{background:linear-gradient(160deg,#c9a5ff,#7a4fd6); color:#1c0d3a; box-shadow:0 4px 12px rgba(122,79,214,0.3), inset 0 1px 0 rgba(255,255,255,0.3);}
-  .action-btn:disabled{filter:grayscale(0.5) brightness(0.7); opacity:0.6;}
-  .badge-count{position:absolute; top:5px; right:7px; font-size:9px; background:rgba(0,0,0,0.25); padding:1px 5px; border-radius:999px;}
+/* ===== 화면 좌표 플로팅 텍스트 ===== */
+.floatTextPage{
+  position:fixed; font-size:13px; font-weight:bold; z-index:300; pointer-events:none;
+  transform:translate(-50%,-50%); animation:floatUpPage 1s ease-out forwards;
+  text-shadow:1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
+}
+@keyframes floatUpPage{
+  0%{opacity:1; transform:translate(-50%,-50%) scale(1);}
+  20%{transform:translate(-50%,-65%) scale(1.15);}
+  100%{opacity:0; transform:translate(-50%,-130%) scale(1);}
+}
+.clickBeeSprite{
+  position:absolute; font-size:22px; z-index:25; pointer-events:none;
+  transition:left .75s ease-in-out, top .75s ease-in-out; filter:drop-shadow(0 2px 2px rgba(0,0,0,.25));
+}
 
-  #hint{position:absolute; bottom:6px; left:0; right:0; text-align:center; font-size:10px; color:var(--ink-faint); z-index:5; pointer-events:none; transition:color 0.4s;}
+/* ===== 황금 벌 ===== */
+.goldenBee{
+  position:absolute; font-size:28px; z-index:70; cursor:pointer;
+  animation:goldenPulse .6s ease-in-out infinite alternate, goldenDrift 2.2s ease-in-out infinite;
+  filter:drop-shadow(0 0 6px #FFD700) drop-shadow(0 0 12px #FFE97A);
+}
+@keyframes goldenPulse{0%{transform:scale(1);}100%{transform:scale(1.18);}}
+@keyframes goldenDrift{0%,100%{margin-top:0;}50%{margin-top:-8px;}}
+
+/* ===== 말벌 습격 ===== */
+.waspSprite{position:absolute; z-index:75; cursor:pointer; text-align:center; animation:waspFly 1s ease-in-out infinite alternate;}
+.waspSprite .waspEmoji{font-size:34px; display:block; filter:hue-rotate(300deg) saturate(3) drop-shadow(0 0 6px rgba(200,20,20,.6));}
+.waspSprite.hit .waspEmoji{animation:waspShake .15s;}
+.waspSprite .waspHp{background:#C0392B; color:#fff; font-size:9px; font-weight:bold; border-radius:8px; padding:1px 6px; margin-top:2px; display:inline-block; box-shadow:0 1px 0 #8E2A1F;}
+.waspSprite .waspBar{width:42px; height:4px; background:rgba(0,0,0,.15); border-radius:3px; margin:3px auto 0; overflow:hidden;}
+.waspSprite .waspBarFill{height:100%; background:#E86B5C; width:100%;}
+@keyframes waspFly{0%{transform:translateY(0) rotate(-4deg);}100%{transform:translateY(-6px) rotate(4deg);}}
+@keyframes waspShake{0%,100%{transform:translateX(0);}25%{transform:translateX(-4px);}75%{transform:translateX(4px);}}
+
+/* ===== 하단 네비 ===== */
+#bottomNav{display:flex; border-top:4px solid #E8B858; background:#FFF3D8; z-index:50;}
+#bottomNav button{
+  flex:1; padding:9px 2px; background:none; border:none; font-size:10px; color:#8A5A22;
+  font-family:inherit; display:flex; flex-direction:column; align-items:center; gap:2px; cursor:pointer;
+}
+#bottomNav button .bIcon{font-size:17px;}
+
+/* ===== 모달 공통 ===== */
+.modalOverlay{position:fixed; inset:0; background:rgba(90,60,20,.45); z-index:100; display:flex; align-items:flex-end; justify-content:center;}
+.modalOverlay.hidden{display:none;}
+.modalBox{
+  background:#FFFBF0; width:100%; max-width:480px; max-height:84vh; overflow-y:auto;
+  border-radius:20px 20px 0 0; border:3px solid #E8B858; border-bottom:none; padding:14px 16px 24px;
+}
+.modalHead{display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;}
+.modalHead h2{font-size:15px; margin:0; color:#8A5A22;}
+.closeX{background:#FFE0C0; border:2px solid #E8B858; border-radius:8px; padding:4px 10px; cursor:pointer;}
+
+.tabRow{display:flex; gap:6px; margin-bottom:10px;}
+.tabBtn{
+  flex:1; padding:8px 4px; border-radius:10px; border:2px solid #E8B858;
+  background:#FFF3D8; font-size:11px; text-align:center; cursor:pointer; color:#8A5A22; font-family:inherit;
+}
+.tabBtn.active{background:#FFB25E; color:#fff; font-weight:bold;}
+.tabPanel{display:none;}
+.tabPanel.active{display:block;}
+
+.sectionLabel{font-size:11px; font-weight:bold; color:#8A5A22; margin:12px 0 6px;}
+
+.gachaCard, .boxCard{
+  border:2px solid; border-radius:14px; padding:11px; margin-bottom:9px;
+  display:flex; align-items:center; gap:9px; background:#fff;
+  box-shadow:0 3px 8px rgba(160,110,40,.14);
+}
+.gachaCard .gEmoji, .boxCard .gEmoji{font-size:28px;}
+.gachaCard .gInfo, .boxCard .gInfo{flex:1;}
+.gachaCard .gInfo b, .boxCard .gInfo b{font-size:12.5px;}
+.gachaCard .gInfo div, .boxCard .gInfo div{font-size:9.5px; color:#886544; margin-top:2px;}
+.gachaBtn{
+  padding:7px 10px; border-radius:10px; border:none; color:#fff; font-size:10px; font-weight:bold; cursor:pointer;
+  box-shadow:0 3px 0 rgba(0,0,0,.2), inset 0 1px 0 rgba(255,255,255,.45); margin-left:3px;
+}
+.gachaBtn:active{transform:translateY(2px); box-shadow:none;}
+.gachaBtn:disabled{opacity:.4;}
+.btnCol{display:flex; flex-direction:column; gap:4px;}
+
+.beeListItem{
+  display:flex; align-items:center; gap:10px; border:2px solid #E8B858; border-radius:12px;
+  padding:8px 10px; margin-bottom:8px; background:#fff;
+}
+.beeListItem .lEmoji{font-size:24px;}
+.beeListItem .lInfo{flex:1; font-size:10.5px;}
+.beeListItem .lInfo b{font-size:12px;}
+.placeBtn{background:#8CD18C; color:#fff; border:none; border-radius:8px; padding:6px 10px; font-size:10px; cursor:pointer;}
+.placeBtn:disabled{background:#ccc;}
+
+.upgradeRow{border:2px solid #E8B858; border-radius:12px; padding:10px; margin-bottom:10px; background:#fff;}
+.upgradeRow .uTitle{font-size:12px; font-weight:bold; margin-bottom:2px;}
+.upgradeRow .uDesc{font-size:10px; color:#886544; margin-bottom:6px;}
+.upgradeRow .uBtn{
+  background:linear-gradient(#FFC97E,#FF9F42); color:#fff; border:none; border-radius:8px; padding:7px 14px; font-size:11px; cursor:pointer;
+  box-shadow:0 2px 0 rgba(0,0,0,.15), inset 0 1px 0 rgba(255,255,255,.4);
+}
+.upgradeRow .uBtn:disabled{background:#ccc; box-shadow:none;}
+.toggleBtn{background:#B8E0C8;}
+.toggleBtn.on{background:#5EBB7A;}
+
+#placeModal .beeListItem{cursor:pointer;}
+
+/* ===== 도감 ===== */
+.dexGrid{display:grid; grid-template-columns:repeat(2,1fr); gap:8px;}
+.dexCard{border:2px solid #E8B858; border-radius:12px; padding:10px 6px; text-align:center; background:#fff; box-shadow:0 3px 8px rgba(160,110,40,.14);}
+.dexCard .dEmoji{font-size:26px;}
+.dexCard .dName{font-size:10px; font-weight:bold; margin-top:4px; color:#7A4A16;}
+.dexCard .dGrade{font-size:8.5px; color:#886544; margin-top:1px;}
+.dexCard .dFlavor{font-size:7.5px; color:#A9906E; margin-top:3px; line-height:1.35; font-style:italic;}
+.dexCard .dPassive{font-size:7.5px; color:#A97C3A; margin-top:3px; line-height:1.35; font-weight:bold;}
+.dexCard.locked{background:#F2EDE2; opacity:.75;}
+.dexCard.locked .dEmoji{filter:grayscale(1) brightness(.6);}
+.dexCard.locked .dName{color:#A99B85;}
+
+/* ===== 설정 ===== */
+.settingRow{display:flex; align-items:center; justify-content:space-between; border:2px solid #E8B858; border-radius:12px; padding:10px 12px; margin-bottom:10px; background:#fff;}
+.settingRow .sLabel{font-size:12px; font-weight:bold;}
+.switchToggle{width:46px; height:26px; border-radius:14px; background:#D8D0C2; position:relative; cursor:pointer; border:2px solid #B8A888; flex-shrink:0;}
+.switchToggle .knob{position:absolute; top:1px; left:1px; width:18px; height:18px; border-radius:50%; background:#fff; box-shadow:0 1px 2px rgba(0,0,0,.3); transition:left .2s;}
+.switchToggle.on{background:#5EBB7A; border-color:#3F9B5C;}
+.switchToggle.on .knob{left:23px;}
+
+#toast{
+  position:fixed; bottom:70px; left:50%; transform:translateX(-50%);
+  background:#5C3213; color:#fff; padding:8px 16px; border-radius:20px; font-size:11px;
+  z-index:200; opacity:0; transition:opacity .3s; pointer-events:none; max-width:88%; text-align:center;
+}
+#toast.show{opacity:1;}
 </style>
 </head>
 <body>
 <div id="app">
-  <header>
-    <div class="title-block">
-      <div class="logo display">HONEYWORKS</div>
-      <div class="sub">일하고 꽃가루를 모아 벌집을 짓고 · 꿀을 팔아 성장시킨다</div>
-    </div>
-    <button id="reset-btn">처음부터</button>
-  </header>
 
-  <div id="resbar">
-    <div class="res-chip labor"><div class="ic">💪</div><div class="valwrap"><div class="val" id="labor-val">0</div><div class="lbl">노동력</div></div></div>
-    <div class="res-chip pollen"><div class="ic">🌼</div><div class="valwrap"><div class="val" id="pollen-val">0</div><div class="lbl">꽃가루</div></div></div>
-    <div class="res-chip honey"><div class="ic">🍯</div><div class="valwrap"><div class="val" id="honey-val">0.0</div><div class="lbl">저장된 꿀</div></div></div>
-    <div class="res-chip money"><div class="ic">💰</div><div class="valwrap"><div class="val" id="money-val">0</div><div class="lbl">돈</div></div></div>
+  <!-- 상단 자원바 -->
+  <div id="topbar">
+    <div class="res labor"><span class="icon">💪</span><span class="val" id="rLabor">0</span></div>
+    <div class="res pollen"><span class="icon">🌸</span><span class="val" id="rPollen">0</span></div>
+    <div class="res honey"><span class="icon">🍯</span><span class="val" id="rHoney">0</span></div>
+    <div class="res money"><span class="icon">💰</span><span class="val" id="rMoney">0</span></div>
+    <div class="res gems"><span class="icon">💎</span><span class="val" id="rGems">0</span></div>
+    <div class="res tickets"><span class="icon">🎫</span><span class="val" id="rTickets">0</span></div>
+    <button id="settingsBtn">🔧</button>
   </div>
 
-  <div id="stage">
-    <svg id="hive-svg">
-      <defs>
-        <linearGradient id="waxRim" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stop-color="#7a5530"/>
-          <stop offset="55%" stop-color="#4a3016"/>
-          <stop offset="100%" stop-color="#241708"/>
-        </linearGradient>
-        <radialGradient id="waxWell" cx="35%" cy="30%" r="75%">
-          <stop offset="0%" stop-color="#2b1c0c"/>
-          <stop offset="100%" stop-color="#120b04"/>
-        </radialGradient>
-        <radialGradient id="honeyGlow1" cx="35%" cy="28%" r="75%">
-          <stop offset="0%" stop-color="#fff3c4"/>
-          <stop offset="45%" stop-color="#ffcf4d"/>
-          <stop offset="100%" stop-color="#c9600f"/>
-        </radialGradient>
-        <radialGradient id="honeyGlow2" cx="35%" cy="28%" r="75%">
-          <stop offset="0%" stop-color="#fff7d6"/>
-          <stop offset="40%" stop-color="#ffb347"/>
-          <stop offset="70%" stop-color="#e8720f"/>
-          <stop offset="100%" stop-color="#a83e05"/>
-        </radialGradient>
-        <radialGradient id="honeyGlow3" cx="35%" cy="28%" r="75%">
-          <stop offset="0%" stop-color="#ffffff"/>
-          <stop offset="30%" stop-color="#ffe37a"/>
-          <stop offset="60%" stop-color="#ffb020"/>
-          <stop offset="100%" stop-color="#8a3d00"/>
-        </radialGradient>
-        <filter id="softGlow" x="-60%" y="-60%" width="220%" height="220%">
-          <feGaussianBlur in="SourceGraphic" stdDeviation="2.2" result="blur"/>
-          <feMerge>
-            <feMergeNode in="blur"/>
-            <feMergeNode in="SourceGraphic"/>
-          </feMerge>
-        </filter>
-      </defs>
-      <g id="world"></g>
-    </svg>
-    <div id="float-layer"></div>
-    <div id="toast-layer"></div>
-    <div id="hint">빈 칸을 눌러 짓고 · 지어진 칸을 눌러 꿀을 채우고 · 채운 방을 눌러 업그레이드</div>
+  <!-- 슬라이드 뷰포트 -->
+  <div id="viewport">
+    <div id="slider">
+      <div class="screen" id="hiveScreen">
+        <div class="screenTitle">🐝 벌집</div>
+        <div id="hiveGrid"></div>
+        <div id="workBtnWrap"><button id="workBtn">✊ 일하기 (+노동력)</button></div>
+        <div class="navArrow" id="toFieldArrow">▶</div>
+      </div>
+      <div class="screen" id="fieldScreen">
+        <div class="screenTitle" id="fieldTitle">🌼 꽃밭</div>
+        <div id="flowerField"></div>
+        <div class="navArrow" id="toHiveArrow">◀</div>
+      </div>
+    </div>
   </div>
 
-  <footer>
-    <div class="btn-row">
-      <button class="action-btn" id="work-btn"><span class="big">💪 일하기</span><span class="small">노동력 +1</span></button>
-      <button class="action-btn" id="gather-btn"><span class="big">🐝 채집 보내기</span><span class="small" id="gather-sub">노동력 8 → 꽃가루</span><span class="badge-count" id="fly-badge" style="display:none;">0/3</span></button>
+  <!-- 하단 네비 -->
+  <div id="bottomNav">
+    <button id="navShop"><span class="bIcon">🎁</span>뽑기</button>
+    <button id="navBees"><span class="bIcon">🐝</span>보유벌</button>
+    <button id="navDex"><span class="bIcon">📖</span>도감</button>
+    <button id="navUpgrade"><span class="bIcon">⚙️</span>업그레이드</button>
+  </div>
+
+  <!-- 뽑기(박스가챠+인벤토리) 모달 -->
+  <div class="modalOverlay hidden" id="shopModal">
+    <div class="modalBox">
+      <div class="modalHead"><h2>🎁 뽑기</h2><span class="closeX" data-close="shopModal">✕</span></div>
+      <div class="tabRow">
+        <div class="tabBtn active" id="tabBoxGacha">🎰 상자 가챠</div>
+        <div class="tabBtn" id="tabInv">📦 인벤토리</div>
+      </div>
+      <div class="tabPanel active" id="panelBoxGacha">
+        <div class="upgradeRow" style="text-align:center;">
+          <div class="uTitle">🎫 보유 티켓: <span id="ticketCountLabel">0</span>개</div>
+          <div class="uDesc">티켓은 벌이 채집을 마치고 돌아올 때 2% 확률로 획득, 꿀 판매 누적 마일스톤 달성, 또는 보석으로 구매할 수 있어요.</div>
+          <button class="uBtn" id="buyTicketBtn">💎10 → 🎫1 구매</button>
+        </div>
+        <div id="boxGachaList"></div>
+      </div>
+      <div class="tabPanel" id="panelInv">
+        <div class="sectionLabel">📦 상자 (B ~ X 등급)</div>
+        <div id="boxInvList"></div>
+        <div class="sectionLabel">🎁 벌 가챠 상자 (Normal ~ GOD)</div>
+        <div id="gachaBoxInvList"></div>
+      </div>
     </div>
-    <div class="btn-row">
-      <button class="action-btn" id="sell-btn"><span class="big">💰 꿀 팔기</span><span class="small" id="sell-sub">꿀 → 돈</span></button>
-      <button class="action-btn" id="worker-btn"><span class="big">👷 일꾼 고용</span><span class="small" id="worker-sub">패시브 노동력</span></button>
+  </div>
+
+  <!-- 보유벌 모달 -->
+  <div class="modalOverlay hidden" id="beesModal">
+    <div class="modalBox">
+      <div class="modalHead"><h2>🐝 보유한 벌</h2><span class="closeX" data-close="beesModal">✕</span></div>
+      <div id="beesList"></div>
     </div>
-  </footer>
+  </div>
+
+  <!-- 도감 모달 -->
+  <div class="modalOverlay hidden" id="dexModal">
+    <div class="modalBox">
+      <div class="modalHead"><h2>📖 벌 도감 (F ~ Y)</h2><span class="closeX" data-close="dexModal">✕</span></div>
+      <div class="dexGrid" id="dexGrid"></div>
+    </div>
+  </div>
+
+  <!-- 배치할 칸 선택 모달 -->
+  <div class="modalOverlay hidden" id="placeModal">
+    <div class="modalBox">
+      <div class="modalHead"><h2>🐝 벌 배치하기</h2><span class="closeX" data-close="placeModal">✕</span></div>
+      <div id="placeList"></div>
+    </div>
+  </div>
+
+  <!-- 업그레이드 모달 -->
+  <div class="modalOverlay hidden" id="menuModal">
+    <div class="modalBox">
+      <div class="modalHead"><h2>⚙️ 업그레이드</h2><span class="closeX" data-close="menuModal">✕</span></div>
+      <div id="upgradeList"></div>
+    </div>
+  </div>
+
+  <!-- 설정 모달 -->
+  <div class="modalOverlay hidden" id="settingsModal">
+    <div class="modalBox">
+      <div class="modalHead"><h2>🔧 설정</h2><span class="closeX" data-close="settingsModal">✕</span></div>
+      <div id="settingsList"></div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
 </div>
 
 <script>
-(function(){
-  "use strict";
+/* ============================================================
+   0. 전역 데이터 / 상태 선언
+   (참조 오류 방지를 위해 모든 전역 변수와 데이터 배열을 최상단에 선언)
+   ============================================================ */
 
-  const SIZE = 40;
-  const MAX_FLYING = 3;
-  const GATHER_LABOR_COST = 8;
-  const GATHER_DURATION_MIN = 1800;
-  const GATHER_DURATION_MAX = 2600;
-  const GATHER_POLLEN_MIN = 4;
-  const GATHER_POLLEN_MAX = 8;
-  const DIRS = [[1,0],[1,-1],[0,-1],[-1,0],[-1,1],[0,1]];
-  const SAVE_KEY = 'hive-save-v2';
-  const HONEY_PRICE = 5;
-  const WORKER_LABOR_RATE = 0.45;
+// ---- 3단계: 벌 등급 데이터 (F ~ Y, 15단계, 총 30종) ----
+var GRADES = [
+  { id:'F',   label:'F',   idx:0,  color:'#D9E8C9', accent:'#8FAE79', baseYield:1,    honeyMult:1,
+    passiveType:'none', passiveValue:0, passiveDesc:'기본 일반 꿀만 채집',
+    pool:[ {name:'아기 꿀벌', emoji:'👶🐝', flavor:'작고 동글동글한 노란 꿀벌'} ] },
+  { id:'D',   label:'D',   idx:1,  color:'#C9E8D0', accent:'#6FBF8A', baseYield:2,    honeyMult:2,
+    passiveType:'yield', passiveValue:20, passiveDesc:'일반 꿀 채집량 +20%',
+    pool:[ {name:'통통 꿀벌', emoji:'🐝', flavor:'뚱뚱하고 통통해서 느릿하게 날아다니는 꿀벌'} ] },
+  { id:'C',   label:'C',   idx:2,  color:'#C9E8E0', accent:'#5CC2A8', baseYield:4,    honeyMult:5,
+    passiveType:'yield', passiveValue:15, passiveDesc:'꽃가루 획득량 +15%',
+    pool:[ {name:'꽃가루 꿀벌', emoji:'🌸🐝', flavor:'온몸에 알록달록한 꽃가루가 듬뿍 묻은 꿀벌'} ] },
+  { id:'B',   label:'B',   idx:3,  color:'#C9DCF2', accent:'#6FA8DC', baseYield:7,    honeyMult:11,
+    passiveType:'specialHoney', passiveValue:1, specialHoneyName:'화염 꿀', specialHoneyEmoji:'🔥',
+    passiveDesc:'🔥 화염 꿀 (1% 확률)',
+    pool:[ {name:'불꽃 꿀벌', emoji:'🔥🐝', flavor:'몸통 끝에서 주황색 불꽃이 이글거리는 벌'} ] },
+  { id:'A',   label:'A',   idx:4,  color:'#D6C9F2', accent:'#9B72D9', baseYield:12,   honeyMult:24,
+    passiveType:'aura', passiveValue:8, passiveDesc:'주변 꽃가루 자동 흡수 (전체 채집량 +8%)',
+    pool:[ {name:'자석 꿀벌', emoji:'🧲🐝', flavor:'자석 뿔이 달려 주변 꽃가루를 끌어당기는 벌'} ] },
+  { id:'S',   label:'S',   idx:5,  color:'#F2C9E8', accent:'#D97CB0', baseYield:20,   honeyMult:53,
+    passiveType:'specialHoney', passiveValue:1.5, specialHoneyName:'번개 꿀', specialHoneyEmoji:'⚡',
+    passiveDesc:'⚡ 번개 꿀 (1.5% 확률)',
+    pool:[ {name:'플라즈마 꿀벌', emoji:'⚡🐝', flavor:'푸른 전기가 지릿지릿하게 흐르는 사이버 꿀벌'} ] },
+  { id:'SS',  label:'SS',  idx:6,  color:'#F2C9D6', accent:'#E0527A', baseYield:33,   honeyMult:115,
+    passiveType:'specialHoneyBoost', passiveValue:5, passiveDesc:'특수 꿀 드랍 확률 +5% (전체 적용)',
+    pool:[ {name:'연금술 꿀벌', emoji:'🧪🐝', flavor:'시약병을 차고 다니는 지적인 녹색 꿀벌'} ] },
+  { id:'SSS', label:'SSS', idx:7,  color:'#F2D0C9', accent:'#E0724F', baseYield:54,   honeyMult:250,
+    passiveType:'specialHoney', passiveValue:2, specialHoneyName:'무지개 꿀', specialHoneyEmoji:'🌈',
+    passiveDesc:'🌈 무지개 꿀 (2% 확률)',
+    pool:[ {name:'프리즘 꿀벌', emoji:'💎🐝', flavor:'반짝이는 보석 결정 형태의 꿀벌'} ] },
+  { id:'T',   label:'T',   idx:8,  color:'#F2E0C9', accent:'#D9A63E', baseYield:88,   honeyMult:550,
+    passiveType:'speed', passiveValue:66.7, passiveDesc:'이동/채집 속도 3배',
+    pool:[ {name:'시공간 꿀벌', emoji:'⏳🐝', flavor:'잔상을 남기며 순간이동하듯 날아다니는 벌'} ] },
+  { id:'TT',  label:'TT',  idx:9,  color:'#F2ECC9', accent:'#D9C23E', baseYield:143,  honeyMult:1200,
+    passiveType:'specialHoney', passiveValue:2.5, specialHoneyName:'우주 꿀', specialHoneyEmoji:'🌌',
+    passiveDesc:'🌌 우주 꿀 (2.5% 확률)',
+    pool:[ {name:'은하 꿀벌', emoji:'🌌🐝', flavor:'몸통에 우주 성운과 별빛이 일렁이는 꿀벌'} ] },
+  { id:'TTT', label:'TTT', idx:10, color:'#FFF0B3', accent:'#FFB300', baseYield:230,  honeyMult:2600,
+    passiveType:'specialHoney', passiveValue:3, specialHoneyName:'우주 꿀', specialHoneyEmoji:'🌌',
+    passiveDesc:'🌌 우주 꿀 (3% 확률)',
+    pool:[ {name:'차원 파괴 벌', emoji:'🌀🐝', flavor:'보랏빛 차원 균열을 끌고 다니는 몽환적 벌'} ] },
+  { id:'X',   label:'X',   idx:11, color:'#E0F2FF', accent:'#33B5E5', baseYield:370,  honeyMult:5700,
+    passiveType:'specialHoney', passiveValue:1, specialHoneyName:'신화의 꿀', specialHoneyEmoji:'👑',
+    passiveDesc:'👑 신화의 꿀 (1% 확률)',
+    pool:[ {name:'태양의 정령 벌', emoji:'☀️🐝', flavor:'눈부신 황금빛 오라를 내뿜는 거대 꿀벌'} ] },
+  { id:'XX',  label:'XX',  idx:12, color:'#E8E0FF', accent:'#7C4FDB', baseYield:600,  honeyMult:12500,
+    passiveType:'burst', passiveValue:50, passiveDesc:'화면 전체 꽃가루 즉시 흡수 (채집 시 추가 흡수)',
+    pool:[ {name:'블랙홀 꿀벌', emoji:'🖤🐝', flavor:'주변의 빛과 꽃가루를 전부 삼키는 어둠의 벌'} ] },
+  { id:'XXX', label:'XXX', idx:13, color:'#FFE0F0', accent:'#E0338F', baseYield:970,  honeyMult:27000,
+    passiveType:'globalSpeed', passiveValue:50, passiveDesc:'모든 벌 채집 속도 2배 버프',
+    pool:[ {name:'시간의 지배자', emoji:'⌛🐝', flavor:'시계 태엽 가죽 장식과 황금 날개를 지닌 벌'} ] },
+  { id:'Y',   label:'Y',   idx:14, color:'#FFFFFF', accent:'#FFD700', baseYield:1560, honeyMult:60000,
+    passiveType:'specialHoney', passiveValue:5, specialHoneyName:'신화의 꿀', specialHoneyEmoji:'👑',
+    passiveDesc:'👑 신화의 꿀 (5% 확률)',
+    pool:[ {name:'태초의 창조 여왕벌', emoji:'👑🐝', flavor:'여왕 왕관과 신성한 신화 빛을 내뿜는 최종 존엄 벌'} ] }
+];
 
-  const OUT_R = SIZE*0.97, IN_R = SIZE*0.76, RING_R = SIZE*0.86;
-  function ptsFor(r){
-    const pts=[];
-    for(let i=0;i<6;i++){ const a=Math.PI/180*(60*i); pts.push((r*Math.cos(a)).toFixed(2)+','+(r*Math.sin(a)).toFixed(2)); }
-    return pts.join(' ');
+// ---- 2단계: 벌 가챠 상자 종류 (Normal ~ GOD) : 개봉 시 F~Y 벌 드랍 확률표 ----
+var GACHA_BOXES = [
+  { id:'normal',   label:'Normal',   emoji:'📦', color:'#B7C9A8', accent:'#8FAE79',
+    dropTable:[ {id:'F',w:50}, {id:'D',w:30}, {id:'C',w:15}, {id:'B',w:5} ] },
+  { id:'epic',     label:'Epic',     emoji:'🎁', color:'#B9D6F2', accent:'#6FA8DC',
+    dropTable:[ {id:'D',w:20}, {id:'C',w:35}, {id:'B',w:30}, {id:'A',w:15} ] },
+  { id:'super',    label:'Super',    emoji:'💠', color:'#F2C9E0', accent:'#D97CB0',
+    dropTable:[ {id:'C',w:10}, {id:'B',w:30}, {id:'A',w:35}, {id:'S',w:20}, {id:'SS',w:5} ] },
+  { id:'ultra',    label:'Ultra',    emoji:'🌟', color:'#C9E6F2', accent:'#4FB6D9',
+    dropTable:[ {id:'B',w:10}, {id:'A',w:20}, {id:'S',w:30}, {id:'SS',w:28}, {id:'SSS',w:12} ] },
+  { id:'infinity', label:'Infinity', emoji:'🌌', color:'#D8C9F2', accent:'#9B72D9',
+    dropTable:[ {id:'S',w:8}, {id:'SS',w:20}, {id:'SSS',w:30}, {id:'T',w:25}, {id:'TT',w:12}, {id:'TTT',w:5} ] },
+  { id:'god',      label:'GOD',      emoji:'✨', color:'#FFE29B', accent:'#FFB300',
+    dropTable:[ {id:'SSS',w:5}, {id:'T',w:12}, {id:'TT',w:23}, {id:'TTT',w:25}, {id:'X',w:18}, {id:'XX',w:10}, {id:'XXX',w:5}, {id:'Y',w:2} ] }
+];
+
+// ---- 1단계: 박스 가챠 등급 (B ~ X) : 개봉 시 벌가챠상자(Normal~GOD) 드랍 확률표 ----
+var BOX_GRADES = [
+  { id:'B',   label:'B',   emoji:'📦', color:'#D9CBB0', accent:'#A9895C',
+    dropTable:[ {id:'normal',w:70}, {id:'epic',w:25}, {id:'super',w:5} ] },
+  { id:'A',   label:'A',   emoji:'📦', color:'#C9DCE8', accent:'#5C8CA9',
+    dropTable:[ {id:'epic',w:60}, {id:'super',w:30}, {id:'ultra',w:10} ] },
+  { id:'S',   label:'S',   emoji:'🎀', color:'#E8C9E0', accent:'#B15C9E',
+    dropTable:[ {id:'super',w:50}, {id:'ultra',w:35}, {id:'infinity',w:15} ] },
+  { id:'SS',  label:'SS',  emoji:'🎀', color:'#D6C9E8', accent:'#7A5CB1',
+    dropTable:[ {id:'ultra',w:50}, {id:'infinity',w:35}, {id:'god',w:15} ] },
+  { id:'SSS', label:'SSS', emoji:'💠', color:'#FFE0B0', accent:'#D9901E',
+    dropTable:[ {id:'infinity',w:60}, {id:'god',w:40} ] },
+  { id:'X',   label:'X',   emoji:'🌟', color:'#FFF3B0', accent:'#FFB300',
+    dropTable:[ {id:'god',w:100} ] }
+];
+// 티켓 1개로 상자 가챠를 돌렸을 때 어떤 등급(B~X) 박스가 나올지에 대한 확률표
+var TICKET_PULL_TABLE = [
+  {id:'B',w:45}, {id:'A',w:27}, {id:'S',w:15}, {id:'SS',w:8}, {id:'SSS',w:4}, {id:'X',w:1}
+];
+
+// ---- 꽃밭 업그레이드 단계 ----
+var FIELD_LEVELS = [
+  { level:1, name:'민들레밭', emoji:'🌼', mult:1, upgradeCost:0 },
+  { level:2, name:'해바라기밭', emoji:'🌻', mult:2, upgradeCost:500 },
+  { level:3, name:'장미밭', emoji:'🌹', mult:4, upgradeCost:5000 },
+  { level:4, name:'세계수', emoji:'🌳', mult:8, upgradeCost:50000 }
+];
+var FIELD_BG = [
+  'radial-gradient(circle at 50% -8%, rgba(255,255,255,.55), transparent 50%), radial-gradient(circle at 50% 18%, #F3FFE8, #B7E89C 85%)',
+  'radial-gradient(circle at 50% -8%, rgba(255,255,255,.6), transparent 50%), radial-gradient(circle at 50% 18%, #FFF9DB, #F4D976 85%)',
+  'radial-gradient(circle at 50% -8%, rgba(255,255,255,.55), transparent 50%), radial-gradient(circle at 50% 18%, #FFEAF1, #F2A9C4 85%)',
+  'radial-gradient(circle at 50% -8%, rgba(255,255,255,.5), transparent 50%), radial-gradient(circle at 50% 18%, #EBE0FF, #8E7CD9 85%)'
+];
+
+// ---- 꿀 판매 누적 마일스톤 (달성 시 티켓 지급) ----
+var TICKET_MILESTONES = [
+  { th:1000,     reward:1 }, { th:5000,     reward:1 }, { th:20000,    reward:2 },
+  { th:100000,   reward:2 }, { th:500000,   reward:3 }, { th:2000000,  reward:3 },
+  { th:10000000, reward:5 }
+];
+
+// ---- 사이클 기본 타이밍(ms) ----
+var CYCLE = { toField:1100, gather:2000, toHive:1100 };
+
+// ---- 전역 상태 ----
+var state = {
+  screen: 0,
+  labor: 0, pollen: 0, honey: 0, money: 50, gems: 5, tickets: 2,
+  hiveCapacity: 4,
+  placedBees: [null, null, null, null],
+  ownedBees: [],
+  fieldLevel: 1,
+  refineLevel: 1,
+  autoSell: false,
+  discoveredBees: [],
+  soundOn: true,
+  boxInventory: { B:0, A:0, S:0, SS:0, SSS:0, X:0 },
+  gachaBoxInventory: { normal:0, epic:0, super:0, ultra:0, infinity:0, god:0 },
+  totalHoneySold: 0,
+  milestonesClaimed: [],
+  lastTick: Date.now()
+};
+
+// ---- 런타임 전용 전역(저장 안 됨) ----
+var activeCycles = {};
+var flowerPositions = [];
+var uidCounter = 0;
+var toastTimer = null;
+var clickBonusLock = {};
+var audioCtx = null;
+var goldenBeeEl = null;
+var goldenBeeTimer = null;
+var waspEl = null;
+var waspState = null;
+var waspStealTimer = null;
+var FLOAT_COLORS = ['#FF7A3D','#5EBB7A','#4FB6D9','#D97CB0','#FFB300','#9B72D9'];
+
+// ---- DOM 참조 ----
+var el = {};
+
+/* ============================================================
+   1. 유틸 함수
+   ============================================================ */
+function genUid(){ uidCounter++; return 'bee_' + Date.now() + '_' + uidCounter; }
+
+function fmtNum(n){
+  n = Math.floor(n);
+  if(n >= 1000000000) return (n/1000000000).toFixed(2)+'B';
+  if(n >= 1000000) return (n/1000000).toFixed(2)+'M';
+  if(n >= 10000) return (n/1000).toFixed(1)+'K';
+  return n.toLocaleString('ko-KR');
+}
+
+function getGrade(gradeId){
+  for(var i=0;i<GRADES.length;i++){ if(GRADES[i].id === gradeId) return GRADES[i]; }
+  return GRADES[0];
+}
+function getGachaBox(boxId){
+  for(var i=0;i<GACHA_BOXES.length;i++){ if(GACHA_BOXES[i].id === boxId) return GACHA_BOXES[i]; }
+  return GACHA_BOXES[0];
+}
+function getBoxGrade(gradeId){
+  for(var i=0;i<BOX_GRADES.length;i++){ if(BOX_GRADES[i].id === gradeId) return BOX_GRADES[i]; }
+  return BOX_GRADES[0];
+}
+function getFieldInfo(){
+  for(var i=0;i<FIELD_LEVELS.length;i++){ if(FIELD_LEVELS[i].level === state.fieldLevel) return FIELD_LEVELS[i]; }
+  return FIELD_LEVELS[0];
+}
+
+// 가중치 테이블에서 랜덤 하나 선택 (table: [{id, w}, ...])
+function weightedPick(table){
+  var total = 0;
+  for(var i=0;i<table.length;i++){ total += table[i].w; }
+  var r = Math.random() * total;
+  for(var j=0;j<table.length;j++){
+    r -= table[j].w;
+    if(r <= 0) return table[j].id;
   }
-  const OUTER_PTS = ptsFor(OUT_R), INNER_PTS = ptsFor(IN_R), RING_PTS = ptsFor(RING_R);
+  return table[table.length-1].id;
+}
 
-  let cells = new Map();
-  let labor=0, pollen=0, honeyStock=0, money=0, workers=0;
-  let flying=[];
-  let camera={x:0,y:0,scale:1}, camTarget={x:0,y:0,scale:1};
-  let saveTimer=null;
-  let elCache = new Map();
+function findOwnedBee(uid){
+  for(var i=0;i<state.ownedBees.length;i++){
+    if(state.ownedBees[i].uid === uid) return state.ownedBees[i];
+  }
+  return null;
+}
 
-  function key(q,r){ return q+','+r; }
-  function ensureCell(q,r){ const k=key(q,r); if(!cells.has(k)) cells.set(k,{q,r,built:false,filled:false,level:1}); return cells.get(k); }
-  function neighbors(q,r){ return DIRS.map(([dq,dr])=>[q+dq,r+dr]); }
-  function builtCount(){ let n=0; for(const c of cells.values()) if(c.built) n++; return n; }
-  function filledCount(){ let n=0; for(const c of cells.values()) if(c.filled) n++; return n; }
-  function buildCost(){ const b=builtCount(); return {labor:Math.floor(10+b*3.2), pollen:Math.floor(5+b*1.6)}; }
-  function fillCost(){ const f=filledCount(); return {pollen:Math.floor(6+f*1.2)}; }
-  function upgradeCost(level){ return Math.floor(35*Math.pow(2.3,level-1)); }
-  function workerCost(){ return Math.floor(22*Math.pow(1.33,workers)); }
+function bestHoneyMult(){
+  var best = 1;
+  for(var i=0;i<state.placedBees.length;i++){
+    var uid = state.placedBees[i];
+    if(!uid) continue;
+    var bee = findOwnedBee(uid);
+    if(!bee) continue;
+    var g = getGrade(bee.gradeId);
+    if(g.honeyMult > best) best = g.honeyMult;
+  }
+  return best;
+}
+function honeyPrice(){ return 10 * bestHoneyMult(); }
 
-  function growableKeys(){
-    const set=new Set();
-    for(const c of cells.values()){
-      if(!c.built) continue;
-      for(const [nq,nr] of neighbors(c.q,c.r)){
-        const nk=key(nq,nr); const nc=cells.get(nk);
-        if(!nc || !nc.built) set.add(nk);
+function computeAuraBonusPercent(){
+  var bonus = 0;
+  for(var i=0;i<state.placedBees.length;i++){
+    var uid = state.placedBees[i]; if(!uid) continue;
+    var bee = findOwnedBee(uid); if(!bee) continue;
+    var g = getGrade(bee.gradeId);
+    if(g.passiveType === 'aura') bonus += g.passiveValue;
+  }
+  return bonus;
+}
+function computeRefineBonus(){
+  var bonus = 0;
+  for(var i=0;i<state.placedBees.length;i++){
+    var uid = state.placedBees[i]; if(!uid) continue;
+    var bee = findOwnedBee(uid); if(!bee) continue;
+    var g = getGrade(bee.gradeId);
+    if(g.passiveType === 'refine') bonus += g.passiveValue;
+  }
+  return bonus;
+}
+function computeSpecialHoneyBoostPercent(){
+  var bonus = 0;
+  for(var i=0;i<state.placedBees.length;i++){
+    var uid = state.placedBees[i]; if(!uid) continue;
+    var bee = findOwnedBee(uid); if(!bee) continue;
+    var g = getGrade(bee.gradeId);
+    if(g.passiveType === 'specialHoneyBoost') bonus += g.passiveValue;
+  }
+  return bonus;
+}
+function computeGlobalSpeedBonusPercent(){
+  var bonus = 0;
+  for(var i=0;i<state.placedBees.length;i++){
+    var uid = state.placedBees[i]; if(!uid) continue;
+    var bee = findOwnedBee(uid); if(!bee) continue;
+    var g = getGrade(bee.gradeId);
+    if(g.passiveType === 'globalSpeed') bonus += g.passiveValue;
+  }
+  return bonus;
+}
+
+function showToast(msg){
+  if(!el.toast) return;
+  el.toast.textContent = msg;
+  el.toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ el.toast.classList.remove('show'); }, 1600);
+}
+
+/* ---- 사운드 엔진 (Web Audio API) ---- */
+function getAudioCtx(){
+  if(!audioCtx){
+    try{ audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }catch(e){ audioCtx = null; }
+  }
+  return audioCtx;
+}
+function playTone(freq, duration, type, delay, vol){
+  if(!state.soundOn) return;
+  var ctx = getAudioCtx();
+  if(!ctx) return;
+  var t0 = ctx.currentTime + (delay||0);
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+  osc.type = type || 'square';
+  osc.frequency.setValueAtTime(freq, t0);
+  gain.gain.setValueAtTime((vol!=null?vol:0.12), t0);
+  gain.gain.exponentialRampToValueAtTime(0.001, t0 + duration);
+  osc.connect(gain); gain.connect(ctx.destination);
+  osc.start(t0); osc.stop(t0 + duration);
+}
+function playClickSound(){ playTone(880,0.08,'square',0,0.08); }
+function playCoinSound(){ playTone(660,0.07,'square',0,0.1); playTone(990,0.09,'square',0.06,0.1); }
+function playGachaSound(){ playTone(523,0.09,'triangle',0,0.12); playTone(659,0.09,'triangle',0.09,0.12); playTone(784,0.16,'triangle',0.18,0.14); }
+function playHitSound(){ playTone(180,0.06,'sawtooth',0,0.1); }
+function playGoldenSound(){ playTone(988,0.08,'sine',0,0.14); playTone(1318,0.12,'sine',0.08,0.14); }
+function playWaspAlarm(){ playTone(220,0.12,'sawtooth',0,0.1); playTone(180,0.14,'sawtooth',0.12,0.1); }
+function playTicketSound(){ playTone(740,0.06,'triangle',0,0.1); playTone(880,0.08,'triangle',0.05,0.1); }
+
+/* ---- 화면 좌표 기준(px) 플로팅 텍스트 ---- */
+function spawnFloatTextPage(clientX, clientY, text, color){
+  var t = document.createElement('div');
+  t.className = 'floatTextPage';
+  t.style.left = clientX+'px';
+  t.style.top = clientY+'px';
+  t.style.color = color || FLOAT_COLORS[Math.floor(Math.random()*FLOAT_COLORS.length)];
+  t.textContent = text;
+  document.getElementById('app').appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 1000);
+}
+
+/* ============================================================
+   2. 저장 / 불러오기
+   ============================================================ */
+function saveGame(){
+  try{
+    var data = {
+      labor:state.labor, pollen:state.pollen, honey:state.honey,
+      money:state.money, gems:state.gems, tickets:state.tickets,
+      hiveCapacity:state.hiveCapacity, placedBees:state.placedBees, ownedBees:state.ownedBees,
+      fieldLevel:state.fieldLevel, refineLevel:state.refineLevel, autoSell:state.autoSell,
+      discoveredBees:state.discoveredBees, soundOn:state.soundOn,
+      boxInventory:state.boxInventory, gachaBoxInventory:state.gachaBoxInventory,
+      totalHoneySold:state.totalHoneySold, milestonesClaimed:state.milestonesClaimed
+    };
+    localStorage.setItem('honeyworks_save', JSON.stringify(data));
+  }catch(e){ /* 저장 실패는 무시 */ }
+}
+
+function loadGame(){
+  try{
+    var raw = localStorage.getItem('honeyworks_save');
+    if(!raw) return;
+    var data = JSON.parse(raw);
+    if(!data) return;
+    state.labor = data.labor || 0;
+    state.pollen = data.pollen || 0;
+    state.honey = data.honey || 0;
+    state.money = (typeof data.money === 'number') ? data.money : 50;
+    state.gems = (typeof data.gems === 'number') ? data.gems : 5;
+    state.tickets = (typeof data.tickets === 'number') ? data.tickets : 2;
+    state.hiveCapacity = data.hiveCapacity || 4;
+    state.placedBees = data.placedBees || new Array(state.hiveCapacity).fill(null);
+    state.ownedBees = data.ownedBees || [];
+    state.fieldLevel = data.fieldLevel || 1;
+    state.refineLevel = data.refineLevel || 1;
+    state.autoSell = !!data.autoSell;
+    state.discoveredBees = data.discoveredBees || [];
+    state.soundOn = (typeof data.soundOn === 'boolean') ? data.soundOn : true;
+    state.boxInventory = data.boxInventory || { B:0, A:0, S:0, SS:0, SSS:0, X:0 };
+    state.gachaBoxInventory = data.gachaBoxInventory || { normal:0, epic:0, super:0, ultra:0, infinity:0, god:0 };
+    state.totalHoneySold = data.totalHoneySold || 0;
+    state.milestonesClaimed = data.milestonesClaimed || [];
+    while(state.placedBees.length < state.hiveCapacity) state.placedBees.push(null);
+  }catch(e){ /* 손상된 세이브는 무시 */ }
+}
+
+/* ============================================================
+   3. 렌더링 - 메인 화면
+   ============================================================ */
+function renderResources(){
+  el.rLabor.textContent = fmtNum(state.labor);
+  el.rPollen.textContent = fmtNum(state.pollen);
+  el.rHoney.textContent = fmtNum(state.honey);
+  el.rMoney.textContent = '$' + fmtNum(state.money);
+  el.rGems.textContent = fmtNum(state.gems);
+  el.rTickets.textContent = fmtNum(state.tickets);
+}
+
+function renderHiveGrid(){
+  el.hiveGrid.innerHTML = '';
+  var perRow = 4;
+  var row = null;
+  for(var i=0;i<state.hiveCapacity;i++){
+    if(i % perRow === 0){
+      row = document.createElement('div');
+      row.className = 'hiveRow';
+      if(Math.floor(i/perRow) % 2 === 1) row.className += ' hiveRowShift';
+      el.hiveGrid.appendChild(row);
+    }
+    (function(idx, rowEl){
+      var uid = state.placedBees[idx];
+      var slot = document.createElement('div');
+      slot.className = 'hexSlot';
+      if(!uid){
+        slot.className += ' empty';
+        slot.innerHTML = '<div class="plus">+</div>';
+        slot.onclick = function(){ openPlaceModalFor(idx); };
+      }else{
+        var bee = findOwnedBee(uid);
+        if(!bee){ state.placedBees[idx] = null; renderHiveGrid(); return; }
+        var grade = getGrade(bee.gradeId);
+        var cyc = activeCycles[idx];
+        var phaseLabel = '대기중';
+        if(cyc){
+          if(cyc.phase==='toField') phaseLabel='이동중';
+          else if(cyc.phase==='gather') phaseLabel='채집중';
+          else if(cyc.phase==='toHive') phaseLabel='귀환중';
+        }
+        slot.style.background = 'radial-gradient(circle at 32% 24%, #fff 0%, '+grade.color+' 55%, '+grade.accent+' 100%)';
+        if(cyc && (cyc.phase==='toField' || cyc.phase==='gather')) slot.className += ' away';
+        else slot.className += ' bobbing';
+        slot.innerHTML =
+          '<div class="beeEmoji">'+bee.emoji+'</div>'+
+          '<div class="beeGradeTag">'+grade.label+'</div>'+
+          '<div class="phaseTag">'+phaseLabel+'</div>';
+        slot.onclick = function(){ triggerBeeClickBonus(idx, bee, grade, slot); };
+      }
+      rowEl.appendChild(slot);
+    })(i, row);
+  }
+}
+
+function renderFlowerField(){
+  var fInfo = getFieldInfo();
+  el.fieldTitle.textContent = fInfo.emoji + ' ' + fInfo.name;
+  if(el.fieldScreen) el.fieldScreen.style.background = FIELD_BG[state.fieldLevel-1] || FIELD_BG[0];
+  el.flowerField.innerHTML = '';
+  flowerPositions = [];
+  var count = 10 + state.fieldLevel * 2;
+  for(var i=0;i<count;i++){
+    var x = 12 + Math.random()*76;
+    var y = 18 + Math.random()*70;
+    flowerPositions.push({x:x,y:y});
+    var f = document.createElement('div');
+    f.className = 'flower';
+    f.style.left = x+'%';
+    f.style.top = y+'%';
+    f.style.animationDelay = (Math.random()*2)+'s';
+    f.textContent = fInfo.emoji;
+    el.flowerField.appendChild(f);
+  }
+}
+
+function renderAll(){
+  renderResources();
+  renderHiveGrid();
+}
+
+/* ============================================================
+   4. 화면 전환
+   ============================================================ */
+function goToScreen(idx){
+  state.screen = idx;
+  el.slider.style.transform = 'translateX(-' + (idx*50) + '%)';
+}
+
+/* ============================================================
+   5. 벌 채집 사이클 (이동 → 채집 → 귀환 → 정제, 패시브 반영)
+   ============================================================ */
+function startBeeCycle(slotIndex){
+  if(activeCycles[slotIndex]) return;
+  var uid = state.placedBees[slotIndex];
+  if(!uid) return;
+  var bee = findOwnedBee(uid);
+  if(!bee) return;
+  var grade = getGrade(bee.gradeId);
+
+  var speedMult = 1;
+  if(grade.passiveType === 'speed'){
+    speedMult = 1 - (grade.passiveValue/100);
+  }
+  var globalSpeedBonus = computeGlobalSpeedBonusPercent();
+  if(globalSpeedBonus > 0){
+    speedMult = speedMult * (1 - globalSpeedBonus/100);
+  }
+  if(speedMult < 0.12) speedMult = 0.12;
+  var t1 = Math.round(CYCLE.toField*speedMult);
+  var t2 = Math.round(CYCLE.gather*speedMult);
+  var t3 = Math.round(CYCLE.toHive*speedMult);
+
+  activeCycles[slotIndex] = { phase:'toField' };
+  renderHiveGrid();
+
+  var beeSprite = document.createElement('div');
+  beeSprite.className = 'flyingBee';
+  beeSprite.textContent = bee.emoji;
+  beeSprite.style.left = '2%';
+  beeSprite.style.top = '85%';
+  beeSprite.style.opacity = '1';
+  el.flowerField.appendChild(beeSprite);
+
+  var targetFlower = flowerPositions.length
+    ? flowerPositions[Math.floor(Math.random()*flowerPositions.length)]
+    : {x:50,y:50};
+
+  requestAnimationFrame(function(){
+    beeSprite.style.left = targetFlower.x + '%';
+    beeSprite.style.top = targetFlower.y + '%';
+  });
+
+  setTimeout(function(){
+    activeCycles[slotIndex].phase = 'gather';
+    renderHiveGrid();
+    spawnSparkle(targetFlower.x, targetFlower.y);
+
+    setTimeout(function(){
+      var fInfo = getFieldInfo();
+      var auraBonus = computeAuraBonusPercent();
+      var yieldBonus = (grade.passiveType === 'yield') ? grade.passiveValue : 0;
+      var base = grade.baseYield * fInfo.mult;
+      var gained = Math.round(base * (1 + auraBonus/100) * (1 + yieldBonus/100));
+      spawnFloatText(targetFlower.x, targetFlower.y, '+'+gained+' 🌸');
+
+      // 특수 꿀 드랍 패시브 (화염/번개/무지개/우주/신화의 꿀)
+      if(grade.passiveType === 'specialHoney'){
+        var honeyChance = grade.passiveValue + computeSpecialHoneyBoostPercent();
+        if(Math.random()*100 < honeyChance){
+          var bonusMoney = Math.max(10, Math.round(grade.honeyMult * 2));
+          state.money += bonusMoney;
+          spawnFloatText(targetFlower.x, targetFlower.y-8, grade.specialHoneyEmoji+' '+grade.specialHoneyName+' +$'+fmtNum(bonusMoney));
+          playCoinSound();
+        }
+      }
+
+      // 블랙홀 흡수 패시브 - 다른 벌들의 생산량 일부를 추가로 흡수
+      if(grade.passiveType === 'burst'){
+        var othersYield = 0;
+        for(var oi=0;oi<state.placedBees.length;oi++){
+          if(oi === slotIndex) continue;
+          var ouid = state.placedBees[oi]; if(!ouid) continue;
+          var obee = findOwnedBee(ouid); if(!obee) continue;
+          var og = getGrade(obee.gradeId);
+          othersYield += og.baseYield * fInfo.mult;
+        }
+        var burstGain = Math.round(othersYield * (grade.passiveValue/100));
+        if(burstGain > 0){
+          gained += burstGain;
+          spawnFloatText(targetFlower.x-6, targetFlower.y, '🕳️ +'+burstGain);
+        }
+      }
+
+      // 박스가챠 티켓 2% 드랍
+      var gotTicket = Math.random() < 0.02;
+      if(gotTicket){
+        state.tickets += 1;
+        spawnFloatText(targetFlower.x+6, targetFlower.y, '+1 🎫');
+      }
+
+      activeCycles[slotIndex].phase = 'toHive';
+      renderHiveGrid();
+      beeSprite.style.left = '2%';
+      beeSprite.style.top = '85%';
+      beeSprite.style.opacity = '0.3';
+
+      setTimeout(function(){
+        state.pollen += gained;
+        if(beeSprite.parentNode) beeSprite.parentNode.removeChild(beeSprite);
+        delete activeCycles[slotIndex];
+        renderHiveGrid();
+        renderResources();
+        if(gotTicket) saveGame();
+        if(state.placedBees[slotIndex] === uid){
+          startBeeCycle(slotIndex);
+        }
+      }, t3);
+
+    }, t2);
+
+  }, t1);
+}
+
+function ensureAllBeesWorking(){
+  for(var i=0;i<state.placedBees.length;i++){
+    if(state.placedBees[i] && !activeCycles[i]){
+      startBeeCycle(i);
+    }
+  }
+}
+
+/* ---- 벌집 슬롯 클릭 보너스 애니메이션 ---- */
+function triggerBeeClickBonus(slotIndex, bee, grade, slotEl){
+  var now = Date.now();
+  if(clickBonusLock[slotIndex] && now - clickBonusLock[slotIndex] < 1700) return;
+  clickBonusLock[slotIndex] = now;
+  playClickSound();
+  if(!slotEl || !el.hiveScreen) return;
+
+  var slotRect = slotEl.getBoundingClientRect();
+  var hiveRect = el.hiveScreen.getBoundingClientRect();
+  var startX = slotRect.left - hiveRect.left + slotRect.width/2;
+  var startY = slotRect.top - hiveRect.top + slotRect.height/2;
+
+  var sprite = document.createElement('div');
+  sprite.className = 'clickBeeSprite';
+  sprite.textContent = bee.emoji;
+  sprite.style.left = startX + 'px';
+  sprite.style.top = startY + 'px';
+  el.hiveScreen.appendChild(sprite);
+
+  var farX = Math.min(hiveRect.width - 20, startX + 90);
+  requestAnimationFrame(function(){
+    sprite.style.left = farX + 'px';
+    sprite.style.top = (startY - 20) + 'px';
+  });
+  setTimeout(function(){
+    sprite.style.left = startX + 'px';
+    sprite.style.top = startY + 'px';
+  }, 750);
+  setTimeout(function(){
+    if(sprite.parentNode) sprite.parentNode.removeChild(sprite);
+    var gained = 10;
+    state.pollen += gained;
+    renderResources();
+    spawnFloatTextPage(slotRect.left + slotRect.width/2, slotRect.top + slotRect.height/2, '+'+gained+' 🌸', '#FF7A3D');
+  }, 1500);
+}
+
+function spawnFloatText(xPct, yPct, text){
+  var t = document.createElement('div');
+  t.className = 'floatText';
+  t.style.left = xPct+'%';
+  t.style.top = yPct+'%';
+  t.style.color = '#C46530';
+  t.textContent = text;
+  el.flowerField.appendChild(t);
+  setTimeout(function(){ if(t.parentNode) t.parentNode.removeChild(t); }, 1150);
+}
+function spawnSparkle(xPct, yPct){
+  var s = document.createElement('div');
+  s.className = 'sparkle';
+  s.style.left = xPct+'%';
+  s.style.top = yPct+'%';
+  s.textContent = '✨';
+  el.flowerField.appendChild(s);
+  setTimeout(function(){ if(s.parentNode) s.parentNode.removeChild(s); }, 850);
+}
+
+/* ============================================================
+   6. 정제 & 판매 & 마일스톤 틱
+   ============================================================ */
+function gameTick(){
+  var now = Date.now();
+  var dt = (now - state.lastTick) / 1000;
+  if(dt > 2) dt = 2;
+  state.lastTick = now;
+
+  var refineRate = 3 * state.refineLevel + computeRefineBonus();
+  var refined = Math.min(state.pollen, refineRate * dt);
+  if(refined > 0){
+    state.pollen -= refined;
+    state.honey += refined;
+  }
+
+  if(state.autoSell && state.honey > 0){
+    var sellAmt = Math.min(state.honey, 5 * dt);
+    if(sellAmt > 0){
+      state.honey -= sellAmt;
+      var earn = sellAmt * honeyPrice();
+      state.money += earn;
+      registerHoneySale(earn);
+    }
+  }
+
+  renderResources();
+}
+
+function registerHoneySale(amount){
+  state.totalHoneySold += amount;
+  for(var i=0;i<TICKET_MILESTONES.length;i++){
+    var m = TICKET_MILESTONES[i];
+    if(state.totalHoneySold >= m.th && state.milestonesClaimed.indexOf(i) === -1){
+      state.milestonesClaimed.push(i);
+      state.tickets += m.reward;
+      showToast('🏆 누적 판매 $'+fmtNum(m.th)+' 달성! 티켓 +'+m.reward+'🎫');
+      playTicketSound();
+    }
+  }
+}
+
+/* ============================================================
+   6b. 돌발 이벤트 (황금 벌 & 말벌 습격)
+   ============================================================ */
+function spawnGoldenBee(){
+  if(goldenBeeEl) return;
+  var screenEl = state.screen === 0 ? el.hiveScreen : el.fieldScreen;
+  if(!screenEl) return;
+  var x = 10 + Math.random()*70;
+  var y = 15 + Math.random()*55;
+  var beeEl = document.createElement('div');
+  beeEl.className = 'goldenBee';
+  beeEl.textContent = '🐝';
+  beeEl.style.left = x+'%';
+  beeEl.style.top = y+'%';
+  beeEl.onclick = function(e){
+    e.stopPropagation();
+    state.money += 500;
+    renderResources();
+    playGoldenSound();
+    spawnFloatTextPage(e.clientX, e.clientY, '+$500', '#FFB300');
+    showToast('✨ 황금 벌 포착! +$500');
+    saveGame();
+    removeGoldenBee();
+  };
+  screenEl.appendChild(beeEl);
+  goldenBeeEl = beeEl;
+  goldenBeeTimer = setTimeout(removeGoldenBee, 5000);
+}
+function removeGoldenBee(){
+  if(goldenBeeTimer){ clearTimeout(goldenBeeTimer); goldenBeeTimer = null; }
+  if(goldenBeeEl){
+    if(goldenBeeEl.parentNode) goldenBeeEl.parentNode.removeChild(goldenBeeEl);
+    goldenBeeEl = null;
+  }
+}
+
+function spawnWasp(){
+  if(waspEl || !el.hiveScreen) return;
+  var x = 15 + Math.random()*60;
+  var y = 18 + Math.random()*50;
+  var w = document.createElement('div');
+  w.className = 'waspSprite';
+  w.style.left = x+'%';
+  w.style.top = y+'%';
+  w.innerHTML =
+    '<span class="waspEmoji">🐝</span>'+
+    '<div class="waspHp">5</div>'+
+    '<div class="waspBar"><div class="waspBarFill"></div></div>';
+  el.hiveScreen.appendChild(w);
+  waspEl = w;
+  waspState = { clicks:0, needed:5 };
+  playWaspAlarm();
+  showToast('⚠️ 말벌이 벌집에 침입했어요! 5번 연속 클릭으로 퇴치하세요!');
+
+  var duration = 8000;
+  var startTime = Date.now();
+  var barFill = w.querySelector('.waspBarFill');
+  var barInterval = setInterval(function(){
+    var elapsed = Date.now() - startTime;
+    var pct = Math.max(0, 100 - (elapsed/duration*100));
+    if(barFill) barFill.style.width = pct + '%';
+    if(elapsed >= duration) clearInterval(barInterval);
+  }, 100);
+
+  w.onclick = function(e){
+    e.stopPropagation();
+    if(!waspState) return;
+    waspState.clicks++;
+    playHitSound();
+    w.classList.add('hit');
+    setTimeout(function(){ if(w) w.classList.remove('hit'); }, 150);
+    var hpEl = w.querySelector('.waspHp');
+    if(hpEl) hpEl.textContent = Math.max(0, waspState.needed - waspState.clicks);
+    spawnFloatTextPage(e.clientX, e.clientY, 'HIT!', '#C0392B');
+    if(waspState.clicks >= waspState.needed){
+      clearInterval(barInterval);
+      defeatWasp();
+    }
+  };
+
+  waspStealTimer = setTimeout(function(){
+    clearInterval(barInterval);
+    stealHoney();
+  }, duration);
+}
+function defeatWasp(){
+  if(waspStealTimer){ clearTimeout(waspStealTimer); waspStealTimer = null; }
+  showToast('🎉 말벌을 퇴치했어요! 꿀을 지켜냈어요.');
+  playGachaSound();
+  removeWasp();
+}
+function stealHoney(){
+  var amount = Math.min(state.honey, Math.max(10, Math.floor(state.honey*0.3)));
+  state.honey -= amount;
+  renderResources();
+  showToast('🐝💦 말벌이 꿀 '+fmtNum(amount)+'개를 훔쳐 달아났어요!');
+  saveGame();
+  removeWasp();
+}
+function removeWasp(){
+  if(waspEl){
+    if(waspEl.parentNode) waspEl.parentNode.removeChild(waspEl);
+    waspEl = null;
+  }
+  waspState = null;
+}
+
+/* ============================================================
+   7. 뽑기 - 1단계: 박스 가챠 (티켓 소모 → B~X 박스 획득)
+   ============================================================ */
+function switchShopTab(tab){
+  var btnBox = document.getElementById('tabBoxGacha');
+  var btnInv = document.getElementById('tabInv');
+  var panelBox = document.getElementById('panelBoxGacha');
+  var panelInv = document.getElementById('panelInv');
+  if(tab === 'gacha'){
+    btnBox.classList.add('active'); btnInv.classList.remove('active');
+    panelBox.classList.add('active'); panelInv.classList.remove('active');
+  }else{
+    btnInv.classList.add('active'); btnBox.classList.remove('active');
+    panelInv.classList.add('active'); panelBox.classList.remove('active');
+    renderInventoryLists();
+  }
+}
+
+function renderBoxGachaList(){
+  document.getElementById('ticketCountLabel').textContent = fmtNum(state.tickets);
+  var buyBtn = document.getElementById('buyTicketBtn');
+  buyBtn.disabled = state.gems < 10;
+  buyBtn.onclick = function(e){
+    if(state.gems < 10) return;
+    state.gems -= 10;
+    state.tickets += 1;
+    playTicketSound();
+    if(e) spawnFloatTextPage(e.clientX, e.clientY, '+1 🎫', '#FFB300');
+    renderResources();
+    renderBoxGachaList();
+    saveGame();
+  };
+
+  var list = document.getElementById('boxGachaList');
+  list.innerHTML = '';
+  var singleRow = document.createElement('div');
+  singleRow.className = 'boxCard';
+  singleRow.style.borderColor = '#E8B858';
+  singleRow.innerHTML =
+    '<div class="gEmoji">🎰</div>'+
+    '<div class="gInfo"><b>상자 가챠 뽑기</b>'+
+    '<div>티켓 1개로 B~X 등급 박스 1개 획득 (등급이 높을수록 좋은 벌 가챠 상자 확률 ↑)</div></div>';
+  var btnCol = document.createElement('div');
+  btnCol.className = 'btnCol';
+  var b1 = document.createElement('button');
+  b1.className = 'gachaBtn'; b1.style.background = '#FFB25E';
+  b1.textContent = '1회 (🎫1)';
+  b1.disabled = state.tickets < 1;
+  b1.onclick = function(e){ pullBoxGacha(1, e); };
+  var b10 = document.createElement('button');
+  b10.className = 'gachaBtn'; b10.style.background = '#FF7A3D';
+  b10.textContent = '10회 (🎫10)';
+  b10.disabled = state.tickets < 10;
+  b10.onclick = function(e){ pullBoxGacha(10, e); };
+  btnCol.appendChild(b1); btnCol.appendChild(b10);
+  singleRow.appendChild(btnCol);
+  list.appendChild(singleRow);
+
+  // 등급별 확률 미리보기 카드
+  for(var i=0;i<BOX_GRADES.length;i++){
+    var bg = BOX_GRADES[i];
+    var card = document.createElement('div');
+    card.className = 'gachaCard';
+    card.style.borderColor = bg.accent;
+    var dropText = bg.dropTable.map(function(d){ return getGachaBox(d.id).label+' '+d.w+'%'; }).join(' · ');
+    card.innerHTML =
+      '<div class="gEmoji">'+bg.emoji+'</div>'+
+      '<div class="gInfo"><b>['+bg.label+'] 박스 개봉 확률</b>'+
+      '<div>'+dropText+'</div></div>';
+    list.appendChild(card);
+  }
+}
+
+function pullBoxGacha(count, evt){
+  if(state.tickets < count){ showToast('🎫 티켓이 부족해요!'); return; }
+  state.tickets -= count;
+  var results = {};
+  for(var i=0;i<count;i++){
+    var gradeId = weightedPick(TICKET_PULL_TABLE);
+    state.boxInventory[gradeId] = (state.boxInventory[gradeId]||0) + 1;
+    results[gradeId] = (results[gradeId]||0) + 1;
+  }
+  playTicketSound();
+  var summary = Object.keys(results).map(function(k){ return '['+k+']x'+results[k]; }).join(' ');
+  showToast('🎁 박스 획득! ' + summary);
+  if(evt) spawnFloatTextPage(evt.clientX, evt.clientY, count>1 ? (count+'개 뽑기!') : '🎁 획득!', '#FF7A3D');
+  renderResources();
+  renderBoxGachaList();
+  saveGame();
+}
+
+/* ============================================================
+   7b. 뽑기 - 2/3단계: 인벤토리 (박스 개봉)
+   ============================================================ */
+function renderInventoryLists(){
+  var boxList = document.getElementById('boxInvList');
+  boxList.innerHTML = '';
+  for(var i=0;i<BOX_GRADES.length;i++){
+    (function(bg){
+      var count = state.boxInventory[bg.id] || 0;
+      var row = document.createElement('div');
+      row.className = 'boxCard';
+      row.style.borderColor = bg.accent;
+      row.innerHTML =
+        '<div class="gEmoji">'+bg.emoji+'</div>'+
+        '<div class="gInfo"><b>['+bg.label+'] 박스</b><div>보유: '+count+'개</div></div>';
+      var btnCol = document.createElement('div');
+      btnCol.className = 'btnCol';
+      var openBtn = document.createElement('button');
+      openBtn.className = 'gachaBtn'; openBtn.style.background = bg.accent;
+      openBtn.textContent = '열기';
+      openBtn.disabled = count < 1;
+      openBtn.onclick = function(e){ openBoxGrade(bg.id, 1, e); };
+      var open10Btn = document.createElement('button');
+      open10Btn.className = 'gachaBtn'; open10Btn.style.background = '#8A5A22';
+      open10Btn.textContent = '10개 열기';
+      open10Btn.disabled = count < 10;
+      open10Btn.onclick = function(e){ openBoxGrade(bg.id, 10, e); };
+      btnCol.appendChild(openBtn); btnCol.appendChild(open10Btn);
+      row.appendChild(btnCol);
+      boxList.appendChild(row);
+    })(BOX_GRADES[i]);
+  }
+
+  var gbList = document.getElementById('gachaBoxInvList');
+  gbList.innerHTML = '';
+  for(var j=0;j<GACHA_BOXES.length;j++){
+    (function(box){
+      var count = state.gachaBoxInventory[box.id] || 0;
+      var row = document.createElement('div');
+      row.className = 'boxCard';
+      row.style.borderColor = box.accent;
+      row.innerHTML =
+        '<div class="gEmoji">'+box.emoji+'</div>'+
+        '<div class="gInfo"><b>'+box.label+' 상자</b><div>보유: '+count+'개 · 열면 벌 등장!</div></div>';
+      var btnCol = document.createElement('div');
+      btnCol.className = 'btnCol';
+      var openBtn = document.createElement('button');
+      openBtn.className = 'gachaBtn'; openBtn.style.background = box.accent;
+      openBtn.textContent = '열기';
+      openBtn.disabled = count < 1;
+      openBtn.onclick = function(e){ openGachaBox(box.id, 1, e); };
+      var open10Btn = document.createElement('button');
+      open10Btn.className = 'gachaBtn'; open10Btn.style.background = '#8A5A22';
+      open10Btn.textContent = '10개 열기';
+      open10Btn.disabled = count < 10;
+      open10Btn.onclick = function(e){ openGachaBox(box.id, 10, e); };
+      btnCol.appendChild(openBtn); btnCol.appendChild(open10Btn);
+      row.appendChild(btnCol);
+      gbList.appendChild(row);
+    })(GACHA_BOXES[j]);
+  }
+}
+
+// 1단계 박스(B~X) 개봉 → 2단계 벌가챠상자(Normal~GOD) 획득
+function openBoxGrade(gradeId, count, evt){
+  var have = state.boxInventory[gradeId] || 0;
+  if(have < count) return;
+  var bg = getBoxGrade(gradeId);
+  var results = {};
+  for(var i=0;i<count;i++){
+    var boxId = weightedPick(bg.dropTable);
+    state.gachaBoxInventory[boxId] = (state.gachaBoxInventory[boxId]||0) + 1;
+    results[boxId] = (results[boxId]||0) + 1;
+  }
+  state.boxInventory[gradeId] -= count;
+  playGachaSound();
+  var summary = Object.keys(results).map(function(k){ return getGachaBox(k).label+'x'+results[k]; }).join(' ');
+  showToast('📦 ['+bg.label+'] 박스 개봉! → ' + summary);
+  if(evt) spawnFloatTextPage(evt.clientX, evt.clientY, summary, bg.accent);
+  renderInventoryLists();
+  renderResources();
+  saveGame();
+}
+
+// 2단계 벌가챠상자(Normal~GOD) 개봉 → 3단계 벌(F~Y) 획득
+function openGachaBox(boxId, count, evt){
+  var have = state.gachaBoxInventory[boxId] || 0;
+  if(have < count) return;
+  var box = getGachaBox(boxId);
+  var gradeCounts = {};
+  var newDexCount = 0;
+  var lastBee = null;
+
+  for(var i=0;i<count;i++){
+    var gradeId = weightedPick(box.dropTable);
+    var grade = getGrade(gradeId);
+    var poolIdx = Math.floor(Math.random()*grade.pool.length);
+    var template = grade.pool[poolIdx];
+    var newBee = { uid:genUid(), gradeId:gradeId, name:template.name, emoji:template.emoji };
+    state.ownedBees.push(newBee);
+    lastBee = newBee;
+    gradeCounts[gradeId] = (gradeCounts[gradeId]||0) + 1;
+
+    var dexKey = gradeId + '_' + poolIdx;
+    if(state.discoveredBees.indexOf(dexKey) === -1){
+      state.discoveredBees.push(dexKey);
+      state.gems += 5;
+      newDexCount++;
+    }
+
+    // 빈 칸 있으면 자동 배치
+    for(var s=0;s<state.placedBees.length;s++){
+      if(!state.placedBees[s]){
+        state.placedBees[s] = newBee.uid;
+        startBeeCycle(s);
+        break;
       }
     }
-    return set;
   }
+  state.gachaBoxInventory[boxId] -= count;
+  playGachaSound();
 
-  function freshState(){
-    cells=new Map(); labor=0; pollen=0; honeyStock=0; money=0; workers=0; flying=[];
-    ensureCell(0,0).built=true;
+  var summary = Object.keys(gradeCounts).map(function(k){ return '['+k+']x'+gradeCounts[k]; }).join(' ');
+  var msg = box.label+' 상자 개봉! ' + summary;
+  if(newDexCount > 0) msg += ' · 📖신규 도감 '+newDexCount+'종 (+'+(newDexCount*5)+'💎)';
+  showToast(msg);
+  if(evt) spawnFloatTextPage(evt.clientX, evt.clientY, count>1 ? '다수 획득!' : (lastBee ? lastBee.emoji+' 획득!' : '획득!'), box.accent);
+
+  renderInventoryLists();
+  renderResources();
+  renderHiveGrid();
+  saveGame();
+}
+
+/* ============================================================
+   8. 보유 벌 목록 & 배치
+   ============================================================ */
+function renderBeesList(){
+  el.beesList.innerHTML = '';
+  if(state.ownedBees.length===0){
+    el.beesList.innerHTML = '<div style="font-size:11px;color:#886544;text-align:center;padding:20px;">아직 보유한 벌이 없어요. 뽑기 탭에서 상자를 모아보세요!</div>';
+    return;
   }
-
-  async function loadState(){
-    try{
-      const res = await window.storage.get(SAVE_KEY, false);
-      if(res && res.value){
-        const s = JSON.parse(res.value);
-        cells=new Map();
-        for(const c of s.cells){ cells.set(key(c.q,c.r), {q:c.q,r:c.r,built:!!c.built,filled:!!c.filled,level:c.level||1}); }
-        labor=s.labor||0; pollen=s.pollen||0; honeyStock=s.honeyStock||0; money=s.money||0; workers=s.workers||0;
-        if(!cells.size) freshState();
-      } else freshState();
-    }catch(e){ freshState(); }
-    fitCamera(true);
-  }
-  function saveStateNow(){
-    try{
-      const s={cells:Array.from(cells.values()), labor, pollen, honeyStock, money, workers};
-      window.storage.set(SAVE_KEY, JSON.stringify(s), false).catch(()=>{});
-    }catch(e){}
-  }
-  function saveStateSoon(){ if(saveTimer) clearTimeout(saveTimer); saveTimer=setTimeout(saveStateNow, 900); }
-
-  const svg = document.getElementById('hive-svg');
-  const world = document.getElementById('world');
-  const NS = 'http://www.w3.org/2000/svg';
-  let cw=0, ch=0;
-
-  function resize(){
-    const stage = document.getElementById('stage');
-    cw = stage.clientWidth; ch = stage.clientHeight;
-    svg.setAttribute('width', cw); svg.setAttribute('height', ch);
-  }
-  window.addEventListener('resize', resize);
-
-  function hexToPixel(q,r){ return { x: SIZE*1.5*q, y: SIZE*(Math.sqrt(3)/2*q + Math.sqrt(3)*r) }; }
-
-  function worldToScreen(x,y){ return { x: cw/2 + (x-camera.x)*camera.scale, y: ch/2 + (y-camera.y)*camera.scale }; }
-
-  function fitCamera(instant){
-    const keys = new Set(cells.keys());
-    for(const k of growableKeys()) keys.add(k);
-    let minX=Infinity,maxX=-Infinity,minY=Infinity,maxY=-Infinity;
-    for(const k of keys){
-      const c = cells.get(k) || {q:parseInt(k.split(',')[0]), r:parseInt(k.split(',')[1])};
-      const p = hexToPixel(c.q,c.r);
-      minX=Math.min(minX,p.x-SIZE); maxX=Math.max(maxX,p.x+SIZE);
-      minY=Math.min(minY,p.y-SIZE); maxY=Math.max(maxY,p.y+SIZE);
-    }
-    const w=maxX-minX, h=maxY-minY, pad=1.35;
-    const scale = Math.min(cw/(w*pad), ch/(h*pad), 2.6);
-    camTarget.scale = Math.max(scale, 0.35);
-    camTarget.x = (minX+maxX)/2; camTarget.y=(minY+maxY)/2;
-    if(instant){ camera.x=camTarget.x; camera.y=camTarget.y; camera.scale=camTarget.scale; }
-  }
-
-  function makeHexEl(k){
-    const g = document.createElementNS(NS,'g');
-    g.setAttribute('class','hexcell');
-    g.dataset.key = k;
-    const outer = document.createElementNS(NS,'polygon');
-    outer.setAttribute('class','outer'); outer.setAttribute('points', OUTER_PTS);
-    const inner = document.createElementNS(NS,'polygon');
-    inner.setAttribute('class','inner'); inner.setAttribute('points', INNER_PTS);
-    const ring = document.createElementNS(NS,'polygon');
-    ring.setAttribute('class','ring'); ring.setAttribute('points', RING_PTS);
-    const shine = document.createElementNS(NS,'ellipse');
-    shine.setAttribute('class','shine');
-    shine.setAttribute('cx', -IN_R*0.28); shine.setAttribute('cy', -IN_R*0.35);
-    shine.setAttribute('rx', IN_R*0.32); shine.setAttribute('ry', IN_R*0.18);
-    shine.setAttribute('transform','rotate(-25)');
-    g.appendChild(outer); g.appendChild(inner); g.appendChild(ring); g.appendChild(shine);
-    g.addEventListener('pointerdown', (e)=>{ e.stopPropagation(); const [q,r]=k.split(',').map(Number); handleTap(q,r); });
-    world.appendChild(g);
-    return g;
-  }
-
-  function syncHexElements(){
-    const grow = growableKeys();
-    const activeKeys = new Set(cells.keys());
-    for(const k of grow) activeKeys.add(k);
-
-    for(const [k, el] of elCache){
-      if(!activeKeys.has(k)){ el.remove(); elCache.delete(k); }
-    }
-    for(const k of activeKeys){
-      let el = elCache.get(k);
-      if(!el){ el = makeHexEl(k); elCache.set(k, el); }
-      const c = cells.get(k);
-      const [q,r] = k.split(',').map(Number);
-      const p = hexToPixel(q,r);
-      el.setAttribute('transform', `translate(${p.x.toFixed(2)} ${p.y.toFixed(2)})`);
-      const built = c && c.built;
-      const filled = c && c.filled;
-      const level = c ? c.level : 1;
-      el.classList.toggle('ghost', !built);
-      el.classList.toggle('filled', !!filled);
-      el.classList.toggle('lv2', !!(filled && level===2));
-      el.classList.toggle('lv3', !!(filled && level===3));
-    }
-  }
-
-  function updateCameraTransform(){
-    world.setAttribute('transform', `translate(${cw/2} ${ch/2}) scale(${camera.scale}) translate(${-camera.x} ${-camera.y})`);
-  }
-
-  // ---------------- bees ----------------
-  let beeEls = new Map();
-  function beeEl(id){
-    let g = beeEls.get(id);
-    if(g) return g;
-    g = document.createElementNS(NS,'g');
-    g.innerHTML = `
-      <ellipse cx="0" cy="0" rx="7" ry="5" fill="#f2c334"/>
-      <rect x="-3.5" y="-5" width="2.6" height="10" fill="#211405"/>
-      <rect x="1" y="-5" width="2.6" height="10" fill="#211405"/>
-      <ellipse cx="-4" cy="-6" rx="5" ry="3" fill="rgba(255,255,255,0.55)" transform="rotate(20 -4 -6)"/>
-      <ellipse cx="4" cy="-6" rx="5" ry="3" fill="rgba(255,255,255,0.55)" transform="rotate(-20 4 -6)"/>
-    `;
-    world.appendChild(g);
-    beeEls.set(id, g);
-    return g;
-  }
-  function removeBeeEl(id){ const g=beeEls.get(id); if(g){ g.remove(); beeEls.delete(id);} }
-
-  function updateBees(){
-    const now = performance.now();
-    for(const b of flying){
-      const t = Math.min(1,(now-b.start)/b.dur);
-      const ease = t<0.5 ? 2*t*t : 1-Math.pow(-2*t+2,2)/2;
-      const dist = 90*Math.sin(Math.min(t,1)*Math.PI) + 10;
-      const bx = Math.cos(b.angle)*dist;
-      const by = Math.sin(b.angle)*dist - 30*Math.sin(ease*Math.PI);
-      const g = beeEl(b.id);
-      g.setAttribute('transform', `translate(${bx.toFixed(1)} ${by.toFixed(1)})`);
-    }
-  }
-
-  // ---------------- floaters ----------------
-  const floatLayer = document.getElementById('float-layer');
-  function pushFloat(worldX, worldY, text, color){
-    const s = worldToScreen(worldX, worldY);
-    const el = document.createElement('div');
-    el.className='floater'; el.textContent=text; el.style.color=color;
-    el.style.left = s.x+'px'; el.style.top = s.y+'px';
-    floatLayer.appendChild(el);
-    setTimeout(()=>el.remove(), 1150);
-  }
-
-  // ---------------- interaction ----------------
-  function handleTap(q,r){
-    const k = key(q,r);
-    const c = cells.get(k);
-    if(c && c.built){
-      if(!c.filled) tryFill(c);
-      else tryUpgrade(c);
-      return;
-    }
-    const grow = growableKeys();
-    if(grow.has(k)) tryBuild(q,r);
-  }
-
-  function tryBuild(q,r){
-    const cost = buildCost();
-    if(labor < cost.labor || pollen < cost.pollen){
-      toast(`짓기엔 부족해요 — 노동력 ${cost.labor} / 꽃가루 ${cost.pollen} 필요`);
-      return;
-    }
-    labor -= cost.labor; pollen -= cost.pollen;
-    const c = ensureCell(q,r); c.built = true;
-    const p = hexToPixel(q,r);
-    pushFloat(p.x,p.y-10,'새 방 완성!','#ffe6a8');
-    fitCamera(false); syncHexElements(); refreshUI(); saveStateSoon();
-  }
-
-  function tryFill(c){
-    const cost = fillCost();
-    if(pollen < cost.pollen){ toast(`꿀을 채우려면 꽃가루 ${cost.pollen}이 필요해요`); return; }
-    pollen -= cost.pollen; c.filled = true; c.level = 1;
-    const p = hexToPixel(c.q,c.r);
-    pushFloat(p.x,p.y-10,'+ 꿀 완성 🍯','#ffcf4d');
-    syncHexElements(); refreshUI(); saveStateSoon();
-  }
-
-  function tryUpgrade(c){
-    if(c.level >= 3){ toast('이미 최고 등급 방이에요 ✨'); return; }
-    const cost = upgradeCost(c.level);
-    if(money < cost){ toast(`업그레이드에 돈 ${cost}이 필요해요`); return; }
-    money -= cost; c.level += 1;
-    const p = hexToPixel(c.q,c.r);
-    pushFloat(p.x,p.y-10, c.level===2?'방 업그레이드! 🥉':'방 업그레이드! 🥇', '#ffd700');
-    syncHexElements(); refreshUI(); saveStateSoon();
-  }
-
-  // ---------------- toasts ----------------
-  const toastLayer = document.getElementById('toast-layer');
-  function toast(msg){
-    const el = document.createElement('div'); el.className='toast'; el.textContent=msg;
-    toastLayer.appendChild(el);
-    setTimeout(()=>el.remove(), 2150);
-  }
-
-  // ---------------- buttons ----------------
-  const workBtn = document.getElementById('work-btn');
-  const gatherBtn = document.getElementById('gather-btn');
-  const sellBtn = document.getElementById('sell-btn');
-  const workerBtn = document.getElementById('worker-btn');
-  const flyBadge = document.getElementById('fly-badge');
-
-  workBtn.addEventListener('click', ()=>{
-    labor += 1;
-    pushFloat(0, -SIZE*2.2, '+1', '#ffb199');
-    refreshUI(); saveStateSoon();
-  });
-
-  gatherBtn.addEventListener('click', ()=>{
-    if(flying.length >= MAX_FLYING){ toast(`이미 ${MAX_FLYING}마리가 채집 중이에요`); return; }
-    if(labor < GATHER_LABOR_COST){ toast(`노동력 ${GATHER_LABOR_COST}이 필요해요`); return; }
-    labor -= GATHER_LABOR_COST;
-    const dur = GATHER_DURATION_MIN + Math.random()*(GATHER_DURATION_MAX-GATHER_DURATION_MIN);
-    flying.push({ id: Math.random().toString(36).slice(2), start: performance.now(), dur, angle: Math.random()*Math.PI*2 });
-    refreshUI(); saveStateSoon();
-  });
-
-  sellBtn.addEventListener('click', ()=>{
-    const amt = Math.floor(honeyStock*10)/10;
-    if(amt <= 0){ toast('팔 꿀이 없어요 — 방에 꿀을 채워보세요'); return; }
-    const gained = Math.floor(amt*HONEY_PRICE);
-    money += gained; honeyStock -= amt;
-    pushFloat(0, -SIZE*1.4, `+${gained} 💰`, '#8fe37a');
-    refreshUI(); saveStateSoon();
-  });
-
-  workerBtn.addEventListener('click', ()=>{
-    const cost = workerCost();
-    if(money < cost){ toast(`일꾼 고용엔 돈 ${cost}이 필요해요`); return; }
-    money -= cost; workers += 1;
-    toast(`일꾼을 고용했어요! (총 ${workers}명)`);
-    refreshUI(); saveStateSoon();
-  });
-
-  document.getElementById('reset-btn').addEventListener('click', ()=>{
-    if(confirm('정말 처음부터 다시 시작할까요? 저장된 벌집이 사라져요.')){
-      freshState(); fitCamera(true); syncHexElements(); refreshUI(); saveStateNow();
-      toast('새 벌집을 시작해요 🐝');
-    }
-  });
-
-  function processFlying(){
-    const now = performance.now();
-    const done = flying.filter(b => now-b.start >= b.dur);
-    if(done.length){
-      flying = flying.filter(b => now-b.start < b.dur);
-      for(const b of done){
-        removeBeeEl(b.id);
-        const gain = Math.floor(GATHER_POLLEN_MIN + Math.random()*(GATHER_POLLEN_MAX-GATHER_POLLEN_MIN+1));
-        pollen += gain;
-        pushFloat(0,-10,`+${gain} 🌼`,'#fff0b8');
+  var sorted = state.ownedBees.slice().sort(function(a,b){ return getGrade(b.gradeId).idx - getGrade(a.gradeId).idx; });
+  for(var i=0;i<sorted.length;i++){
+    (function(bee){
+      var grade = getGrade(bee.gradeId);
+      var placedIdx = state.placedBees.indexOf(bee.uid);
+      var item = document.createElement('div');
+      item.className = 'beeListItem';
+      item.style.borderColor = grade.accent;
+      item.innerHTML =
+        '<div class="lEmoji">'+bee.emoji+'</div>'+
+        '<div class="lInfo"><b>'+bee.name+'</b> · ['+grade.label+']<br>생산량 '+grade.baseYield+' · '+grade.passiveDesc+'</div>';
+      var btn = document.createElement('button');
+      btn.className = 'placeBtn';
+      if(placedIdx >= 0){
+        btn.textContent = '배치됨('+(placedIdx+1)+'번)';
+        btn.disabled = true;
+      }else{
+        btn.textContent = '배치하기';
+        btn.onclick = function(){ openPlaceModalForBee(bee.uid); };
       }
-      refreshUI(); saveStateSoon();
+      item.appendChild(btn);
+      el.beesList.appendChild(item);
+    })(sorted[i]);
+  }
+}
+
+function openPlaceModalFor(slotIndex){
+  el.placeList.innerHTML = '';
+  var unplaced = state.ownedBees.filter(function(b){ return state.placedBees.indexOf(b.uid) === -1; });
+  if(unplaced.length===0){
+    el.placeList.innerHTML = '<div style="font-size:11px;color:#886544;text-align:center;padding:20px;">배치할 수 있는 벌이 없어요. 뽑기 탭에서 상자를 열어보세요!</div>';
+  }else{
+    unplaced.forEach(function(bee){
+      var grade = getGrade(bee.gradeId);
+      var item = document.createElement('div');
+      item.className = 'beeListItem';
+      item.style.borderColor = grade.accent;
+      item.innerHTML =
+        '<div class="lEmoji">'+bee.emoji+'</div>'+
+        '<div class="lInfo"><b>'+bee.name+'</b> · ['+grade.label+']<br>생산량 '+grade.baseYield+'</div>';
+      item.onclick = function(){
+        state.placedBees[slotIndex] = bee.uid;
+        closeModal('placeModal');
+        renderHiveGrid();
+        startBeeCycle(slotIndex);
+        saveGame();
+      };
+      el.placeList.appendChild(item);
+    });
+  }
+  openModal('placeModal');
+}
+
+function openPlaceModalForBee(beeUid){
+  el.placeList.innerHTML = '';
+  var emptySlots = [];
+  for(var i=0;i<state.placedBees.length;i++){ if(!state.placedBees[i]) emptySlots.push(i); }
+  if(emptySlots.length===0){
+    el.placeList.innerHTML = '<div style="font-size:11px;color:#886544;text-align:center;padding:20px;">빈 칸이 없어요. 벌집을 확장해주세요!</div>';
+  }else{
+    emptySlots.forEach(function(idx){
+      var item = document.createElement('div');
+      item.className = 'beeListItem';
+      item.innerHTML = '<div class="lEmoji">🔲</div><div class="lInfo"><b>'+(idx+1)+'번 칸</b></div>';
+      item.onclick = function(){
+        state.placedBees[idx] = beeUid;
+        closeModal('placeModal');
+        renderHiveGrid();
+        renderBeesList();
+        startBeeCycle(idx);
+        saveGame();
+      };
+      el.placeList.appendChild(item);
+    });
+  }
+  openModal('placeModal');
+}
+
+/* ============================================================
+   8b. 벌 도감 (F ~ Y)
+   ============================================================ */
+function renderDexList(){
+  var grid = document.getElementById('dexGrid');
+  grid.innerHTML = '';
+  for(var i=0;i<GRADES.length;i++){
+    var grade = GRADES[i];
+    for(var j=0;j<grade.pool.length;j++){
+      (function(grade, template, poolIdx){
+        var key = grade.id + '_' + poolIdx;
+        var discovered = state.discoveredBees.indexOf(key) !== -1;
+        var card = document.createElement('div');
+        card.className = 'dexCard' + (discovered ? '' : ' locked');
+        if(discovered){
+          card.style.borderColor = grade.accent;
+          card.innerHTML =
+            '<div class="dEmoji">'+template.emoji+'</div>'+
+            '<div class="dName">'+template.name+'</div>'+
+            '<div class="dGrade">['+grade.label+'] 생산 '+grade.baseYield+'</div>'+
+            (template.flavor ? '<div class="dFlavor">'+template.flavor+'</div>' : '')+
+            '<div class="dPassive">'+grade.passiveDesc+'</div>';
+        }else{
+          card.innerHTML =
+            '<div class="dEmoji">❔</div>'+
+            '<div class="dName">???</div>'+
+            '<div class="dGrade">['+grade.label+']</div>';
+        }
+        grid.appendChild(card);
+      })(grade, grade.pool[j], j);
     }
   }
+}
 
-  // ---------------- UI refresh ----------------
-  function refreshUI(){
-    document.getElementById('labor-val').textContent = Math.floor(labor);
-    document.getElementById('pollen-val').textContent = Math.floor(pollen);
-    document.getElementById('honey-val').textContent = honeyStock.toFixed(1);
-    document.getElementById('money-val').textContent = Math.floor(money);
-    document.getElementById('gather-sub').textContent = `노동력 ${GATHER_LABOR_COST} → 꽃가루`;
-    document.getElementById('sell-sub').textContent = `1꿀=${HONEY_PRICE}돈 판매`;
-    document.getElementById('worker-sub').textContent = `${workerCost()}돈 · +${WORKER_LABOR_RATE}/초 (보유 ${workers})`;
-    if(flying.length>0){ flyBadge.style.display='block'; flyBadge.textContent = `${flying.length}/${MAX_FLYING}`; }
-    else flyBadge.style.display='none';
-  }
+/* ============================================================
+   9. 업그레이드
+   ============================================================ */
+function hiveExpandCost(){ return Math.round(80 * Math.pow(state.hiveCapacity, 1.6)); }
+function refineUpgradeCost(){ return Math.round(200 * Math.pow(state.refineLevel, 1.6)); }
 
-  // ---------------- main loop ----------------
-  let lastT = performance.now();
-  function loop(t){
-    const dt = Math.min(0.05,(t-lastT)/1000);
-    lastT = t;
+function renderUpgradeList(){
+  el.upgradeList.innerHTML = '';
 
-    if(workers>0){ labor += dt*workers*WORKER_LABOR_RATE; }
-    const fc = filledCount();
-    if(fc>0){
-      let rate=0;
-      for(const c of cells.values()){
-        if(!c.filled) continue;
-        rate += c.level===3?0.5:(c.level===2?0.28:0.12);
+  var expCost = hiveExpandCost();
+  el.upgradeList.appendChild(makeUpgradeRow(
+    '🏠 벌집 확장', '현재 '+state.hiveCapacity+'칸 → '+(state.hiveCapacity+1)+'칸',
+    '$'+fmtNum(expCost)+' 확장', state.money >= expCost && state.hiveCapacity < 60,
+    function(){
+      state.money -= expCost;
+      state.hiveCapacity += 1;
+      state.placedBees.push(null);
+      showToast('벌집이 확장되었어요!');
+      renderAll(); renderUpgradeList(); saveGame();
+    }
+  ));
+
+  var fInfo = getFieldInfo();
+  var nextField = FIELD_LEVELS.filter(function(f){return f.level===state.fieldLevel+1;})[0];
+  if(nextField){
+    el.upgradeList.appendChild(makeUpgradeRow(
+      '🌷 꽃밭 업그레이드', fInfo.name+' → '+nextField.name+' (채집량 x'+nextField.mult+')',
+      '$'+fmtNum(nextField.upgradeCost)+' 업그레이드', state.money >= nextField.upgradeCost,
+      function(){
+        state.money -= nextField.upgradeCost;
+        state.fieldLevel = nextField.level;
+        showToast(nextField.name+'(으)로 업그레이드!');
+        renderFlowerField(); renderUpgradeList(); renderResources(); saveGame();
       }
-      honeyStock += dt*rate;
+    ));
+  }else{
+    el.upgradeList.appendChild(makeUpgradeRow('🌷 꽃밭 업그레이드','최고 단계('+fInfo.name+') 달성!','완료',false,function(){}));
+  }
+
+  var refCost = refineUpgradeCost();
+  el.upgradeList.appendChild(makeUpgradeRow(
+    '🏭 정제소 업그레이드', '정제 속도 Lv.'+state.refineLevel+' → Lv.'+(state.refineLevel+1),
+    '$'+fmtNum(refCost)+' 업그레이드', state.money >= refCost,
+    function(){
+      state.money -= refCost;
+      state.refineLevel += 1;
+      showToast('정제 속도가 빨라졌어요!');
+      renderResources(); renderUpgradeList(); saveGame();
     }
+  ));
 
-    camera.x += (camTarget.x-camera.x)*Math.min(1,dt*4);
-    camera.y += (camTarget.y-camera.y)*Math.min(1,dt*4);
-    camera.scale += (camTarget.scale-camera.scale)*Math.min(1,dt*4);
-    updateCameraTransform();
-    processFlying();
-    updateBees();
-
-    if(Math.floor(t/250) !== Math.floor(lastT/250)) refreshUI();
-
-    requestAnimationFrame(loop);
+  var autoSellCost = 2000;
+  var row = document.createElement('div');
+  row.className = 'upgradeRow';
+  row.innerHTML =
+    '<div class="uTitle">💵 자동 판매</div>'+
+    '<div class="uDesc">저장된 꿀을 자동으로 판매해요 (현재 꿀 가격: $'+honeyPrice()+' / 개)</div>';
+  var abtn = document.createElement('button');
+  if(state.autoSell){
+    abtn.className='uBtn toggleBtn on'; abtn.textContent='ON (구매완료)'; abtn.disabled = true;
+  }else{
+    abtn.className='uBtn toggleBtn'; abtn.textContent='$'+fmtNum(autoSellCost)+'로 구매'; abtn.disabled = state.money < autoSellCost;
+    abtn.onclick = function(){
+      state.money -= autoSellCost;
+      state.autoSell = true;
+      showToast('자동 판매가 활성화되었어요!');
+      renderUpgradeList(); renderResources(); saveGame();
+    };
   }
+  row.appendChild(abtn);
+  el.upgradeList.appendChild(row);
 
-  async function boot(){
-    resize();
-    await loadState();
-    syncHexElements();
-    updateCameraTransform();
-    refreshUI();
-    requestAnimationFrame(loop);
+  el.upgradeList.appendChild(makeUpgradeRow(
+    '✊ 노동력 부스트', '노동력 10을 사용해 꽃가루 최대 30을 즉시 꿀로 정제',
+    '노동력 10 사용', state.labor >= 10 && state.pollen > 0,
+    function(){
+      state.labor -= 10;
+      var amt = Math.min(state.pollen, 30);
+      state.pollen -= amt;
+      state.honey += amt;
+      showToast('즉시 정제 완료! +'+amt+' 🍯');
+      renderResources(); renderUpgradeList(); saveGame();
+    }
+  ));
+
+  el.upgradeList.appendChild(makeUpgradeRow(
+    '🏪 꿀 판매하기', '보유한 꿀 '+fmtNum(state.honey)+'개를 개당 $'+honeyPrice()+'에 판매',
+    '전부 판매', state.honey > 0,
+    function(e){
+      var earn = state.honey * honeyPrice();
+      state.money += earn;
+      state.honey = 0;
+      registerHoneySale(earn);
+      showToast('$'+fmtNum(earn)+' 판매 완료!');
+      playCoinSound();
+      if(e) spawnFloatTextPage(e.clientX, e.clientY, '+$'+fmtNum(earn), '#5EBB7A');
+      renderResources(); renderUpgradeList(); saveGame();
+    }
+  ));
+}
+
+function makeUpgradeRow(title, desc, btnLabel, enabled, onClick){
+  var row = document.createElement('div');
+  row.className = 'upgradeRow';
+  row.innerHTML = '<div class="uTitle">'+title+'</div><div class="uDesc">'+desc+'</div>';
+  var btn = document.createElement('button');
+  btn.className = 'uBtn';
+  btn.textContent = btnLabel;
+  btn.disabled = !enabled;
+  btn.onclick = onClick;
+  row.appendChild(btn);
+  return row;
+}
+
+/* ============================================================
+   9b. 설정
+   ============================================================ */
+function renderSettingsList(){
+  var list = document.getElementById('settingsList');
+  list.innerHTML = '';
+
+  var soundRow = document.createElement('div');
+  soundRow.className = 'settingRow';
+  soundRow.innerHTML = '<div class="sLabel">🔊 효과음</div>';
+  var toggle = document.createElement('div');
+  toggle.className = 'switchToggle' + (state.soundOn ? ' on' : '');
+  toggle.innerHTML = '<div class="knob"></div>';
+  toggle.onclick = function(){
+    state.soundOn = !state.soundOn;
+    if(state.soundOn) playClickSound();
+    renderSettingsList();
+    saveGame();
+  };
+  soundRow.appendChild(toggle);
+  list.appendChild(soundRow);
+
+  var resetRow = document.createElement('div');
+  resetRow.className = 'upgradeRow';
+  resetRow.innerHTML = '<div class="uTitle">⚠️ 게임 초기화</div><div class="uDesc">모든 진행 상황이 삭제됩니다. 되돌릴 수 없어요.</div>';
+  var rbtn = document.createElement('button');
+  rbtn.className = 'uBtn'; rbtn.style.background = '#E86B5C';
+  rbtn.textContent = '초기화';
+  rbtn.onclick = function(){
+    if(confirm('정말로 초기화할까요? 되돌릴 수 없어요!')){
+      localStorage.removeItem('honeyworks_save');
+      location.reload();
+    }
+  };
+  resetRow.appendChild(rbtn);
+  list.appendChild(resetRow);
+}
+
+/* ============================================================
+   10. 모달 제어
+   ============================================================ */
+function openModal(id){ document.getElementById(id).classList.remove('hidden'); }
+function closeModal(id){ document.getElementById(id).classList.add('hidden'); }
+
+/* ============================================================
+   11. 초기화
+   ============================================================ */
+function cacheDom(){
+  el.rLabor = document.getElementById('rLabor');
+  el.rPollen = document.getElementById('rPollen');
+  el.rHoney = document.getElementById('rHoney');
+  el.rMoney = document.getElementById('rMoney');
+  el.rGems = document.getElementById('rGems');
+  el.rTickets = document.getElementById('rTickets');
+  el.slider = document.getElementById('slider');
+  el.hiveScreen = document.getElementById('hiveScreen');
+  el.hiveGrid = document.getElementById('hiveGrid');
+  el.flowerField = document.getElementById('flowerField');
+  el.fieldTitle = document.getElementById('fieldTitle');
+  el.fieldScreen = document.getElementById('fieldScreen');
+  el.beesList = document.getElementById('beesList');
+  el.placeList = document.getElementById('placeList');
+  el.upgradeList = document.getElementById('upgradeList');
+  el.toast = document.getElementById('toast');
+}
+
+function bindEvents(){
+  document.getElementById('toFieldArrow').onclick = function(){ goToScreen(1); };
+  document.getElementById('toHiveArrow').onclick = function(){ goToScreen(0); };
+
+  document.getElementById('workBtn').onclick = function(e){
+    var gain = 1 + Math.floor(Math.random()*3);
+    state.labor += gain;
+    renderResources();
+    playClickSound();
+    spawnFloatTextPage(e.clientX, e.clientY, '+'+gain+' 💪', '#B08968');
+  };
+
+  document.getElementById('settingsBtn').onclick = function(){ renderSettingsList(); openModal('settingsModal'); };
+  document.getElementById('navShop').onclick = function(){ switchShopTab('gacha'); renderBoxGachaList(); openModal('shopModal'); };
+  document.getElementById('navBees').onclick = function(){ renderBeesList(); openModal('beesModal'); };
+  document.getElementById('navDex').onclick = function(){ renderDexList(); openModal('dexModal'); };
+  document.getElementById('navUpgrade').onclick = function(){ renderUpgradeList(); openModal('menuModal'); };
+
+  document.getElementById('tabBoxGacha').onclick = function(){ switchShopTab('gacha'); };
+  document.getElementById('tabInv').onclick = function(){ switchShopTab('inv'); };
+
+  var closers = document.querySelectorAll('[data-close]');
+  for(var i=0;i<closers.length;i++){
+    closers[i].onclick = function(){ closeModal(this.getAttribute('data-close')); };
   }
-  boot();
-})();
+  var overlays = document.querySelectorAll('.modalOverlay');
+  for(var j=0;j<overlays.length;j++){
+    overlays[j].addEventListener('click', function(e){
+      if(e.target === this) this.classList.add('hidden');
+    });
+  }
+}
+
+function init(){
+  cacheDom();
+  loadGame();
+  bindEvents();
+  renderAll();
+  renderFlowerField();
+  goToScreen(0);
+  ensureAllBeesWorking();
+
+  setInterval(gameTick, 500);
+  setInterval(saveGame, 5000);
+  setInterval(spawnGoldenBee, 45000);
+  setInterval(spawnWasp, 120000);
+  window.addEventListener('beforeunload', saveGame);
+}
+
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
